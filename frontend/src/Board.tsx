@@ -68,14 +68,14 @@ export default function Board() {
               }
 
               setParticles((prev) => [
-                ...prev,
-                ...Array.from({ length: 8 }).map(
-                  () =>
-                    new Particle(enemy.x, enemy.y, 4, enemy.color, {
-                      x: (Math.random() - 0.5) * 2,
-                      y: (Math.random() - 0.5) * 2,
-                    })
-                ),
+                ...prev.filter((particle) => particle.alpha > 0),
+                ...Array.from({ length: enemy.radius }).map(() => {
+                  const radius = Math.random() * 4;
+                  return new Particle(enemy.x, enemy.y, radius, enemy.color, {
+                    x: (Math.random() - 0.5) * radius * 2,
+                    y: (Math.random() - 0.5) * radius * 2,
+                  });
+                }),
               ]);
             }, 0);
           }

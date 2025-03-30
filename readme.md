@@ -18,9 +18,9 @@ Using gsap for animation -> as it provides more granular control over the values
 
 [x] Adding colorizing to the objects
 
-[] Shrinking enemy size on hits
+[x] Shrinking enemy size on hits
 
-[] Creating particle effects on hit
+[x] Creating particle effects on hit
 
 [] Adding effect for projectile for shooting with projectile motion. The more we held the mouse the more distance or motion it gonna travel like archer games
 
