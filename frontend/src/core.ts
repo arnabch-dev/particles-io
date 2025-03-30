@@ -1,9 +1,9 @@
 const startAngle = 0;
 const endAngle = Math.PI * 2; // full circle
 type Coodinate = {
-    x:number,
-    y:number;
-}
+  x: number;
+  y: number;
+};
 export class Circle {
   constructor(
     public x: number,
@@ -20,11 +20,33 @@ export class Circle {
 }
 
 export class Projectile extends Circle {
-    constructor(x: number, y: number, radius: number, color: string,public velocity:Coodinate) {
-      super(x, y, radius, color);
-    }
-    update(){
-        this.x += this.velocity.x
-        this.y += this.velocity.y
-    }
+  constructor(
+    x: number,
+    y: number,
+    radius: number,
+    color: string,
+    public velocity: Coodinate
+  ) {
+    super(x, y, radius, color);
+  }
+  update() {
+    this.x += this.velocity.x;
+    this.y += this.velocity.y;
+  }
+}
+
+export class Particle extends Circle {
+  constructor(
+    x: number,
+    y: number,
+    radius: number,
+    color: string,
+    public velocity: Coodinate
+  ) {
+    super(x, y, radius, color);
+  }
+  update() {
+    this.x += this.velocity.x;
+    this.y += this.velocity.y;
+  }
 }

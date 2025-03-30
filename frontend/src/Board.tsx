@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Circle, Projectile } from "./core";
+import { Circle, Particle, Projectile } from "./core";
 import { checkCollision, getVelocity } from "./utils";
+import { gsap } from "gsap";
+
 const width = window.innerWidth;
 const height = window.innerHeight;
 const player = new Circle(width / 2, height / 2, 30, "white");
 export default function Board() {
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
+  const [particles, setParticles] = useState<Particle[]>([]);
   // should come from the server
   const [enemies, setEnemies] = useState<Projectile[]>([]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -41,6 +44,7 @@ export default function Board() {
           cancelAnimationFrame(animationId);
           setEnemies([]);
           setProjectiles([]);
+          setParticles([]);
         }
         // check collision
         projectiles.forEach((projectile, projectileIndex) => {
@@ -49,23 +53,37 @@ export default function Board() {
               setProjectiles((prev) =>
                 prev.filter((_, i) => i !== projectileIndex)
               );
-              setEnemies((prev) => {
-                const curEnemyIdx = prev.findIndex((_, i) => i === enemyIndex)
-                const curEnemy = prev[curEnemyIdx]
-                if(curEnemy.radius<15){
-                  return prev.filter((_, i) => i !== enemyIndex)
-                }
-                return prev.map((enemy, i) => {
-                  if((i === enemyIndex)){
-                    enemy.radius-=10
-                  }
-                  return enemy
-                })
+              // enemy handling
+              const newRadius = enemy.radius - 10;
+              if (newRadius < 15) {
+                // removing the enemy
+                setEnemies((prev) => prev.filter((_, i) => i !== enemyIndex));
+              } else {
+                // Animate the radius reduction
+                gsap.to(enemy, {
+                  radius: newRadius,
+                  duration: 0.3,
+                  ease: "expo.out(1, 0.3)",
+                });
+              }
 
-              });
+              setParticles((prev) => [
+                ...prev,
+                ...Array.from({ length: 8 }).map(
+                  () =>
+                    new Particle(enemy.x, enemy.y, 4, enemy.color, {
+                      x: (Math.random() - 0.5) * 2,
+                      y: (Math.random() - 0.5) * 2,
+                    })
+                ),
+              ]);
             }, 0);
           }
         });
+      });
+      particles.forEach((particle) => {
+        particle.update();
+        particle.draw(context);
       });
       animationId = requestAnimationFrame(render);
     };
@@ -95,7 +113,7 @@ export default function Board() {
       }
       // randomising color using hsl which takes 0 to 360 in hue
       const hue = Math.random() * 360;
-      const color = `hsl(${hue},50%,50%)`
+      const color = `hsl(${hue},50%,50%)`;
       const velocity = getVelocity(player.y - y, player.x - x);
       const enemy = new Projectile(x, y, radius, color, velocity);
 
@@ -109,7 +127,7 @@ export default function Board() {
       cancelAnimationFrame(animationId);
       clearInterval(intervalId);
     };
-  }, [projectiles, enemies]);
+  }, [projectiles, enemies, particles]);
 
   useEffect(() => {
     function shoot(e: MouseEvent) {

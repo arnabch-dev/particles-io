@@ -1,6 +1,8 @@
 ### About
 Just a normal 2d shooting game for exploring canvas and server driven events and real challenges of realtime(inspired by a video from youtube)
 
+Using gsap for animation -> as it provides more granular control over the values and not dom focused like framer motion
+
 # Modes
 
 ### From Canvas side(Single Player mode)
