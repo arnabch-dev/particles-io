@@ -39,7 +39,6 @@ export default function Board() {
         enemy.draw(context);
         if (checkCollision(player, enemy)) {
           cancelAnimationFrame(animationId);
-          alert("game over");
           setEnemies([]);
           setProjectiles([]);
         }
@@ -50,7 +49,20 @@ export default function Board() {
               setProjectiles((prev) =>
                 prev.filter((_, i) => i !== projectileIndex)
               );
-              setEnemies((prev) => prev.filter((_, i) => i !== enemyIndex));
+              setEnemies((prev) => {
+                const curEnemyIdx = prev.findIndex((_, i) => i === enemyIndex)
+                const curEnemy = prev[curEnemyIdx]
+                if(curEnemy.radius<15){
+                  return prev.filter((_, i) => i !== enemyIndex)
+                }
+                return prev.map((enemy, i) => {
+                  if((i === enemyIndex)){
+                    enemy.radius-=10
+                  }
+                  return enemy
+                })
+
+              });
             }, 0);
           }
         });
@@ -106,7 +118,7 @@ export default function Board() {
       const projectile = new Projectile(
         player.x,
         player.y,
-        10,
+        5,
         player.color,
         velocity
       );

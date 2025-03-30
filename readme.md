@@ -20,6 +20,8 @@ Just a normal 2d shooting game for exploring canvas and server driven events and
 
 [] Creating particle effects on hit
 
+[] Adding effect for projectile for shooting with projectile motion. The more we held the mouse the more distance or motion it gonna travel like archer games
+
 ### Multiplayer
 [] Creating multiple players
 
