@@ -10,11 +10,9 @@ Just a normal 2d shooting game for exploring canvas and server driven events and
 
 [x] Creating enemies
 
-[] Detect Collsion on enemy/projectile hit
+[x] Detect Collsion on enemy/projectile hit
 
-[] Detect Collsion on enemy/projectile hit
-
-[] Remove off screen projectiles
+[x] Detect Collsion on enemy/player hit
 
 [] Shrinking enemy size on hits
 

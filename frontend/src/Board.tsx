@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Circle, Projectile } from "./core";
-import { getVelocity } from "./utils";
+import { checkCollision, getVelocity } from "./utils";
 const width = window.innerWidth;
 const height = window.innerHeight;
 const player = new Circle(width / 2, height / 2, 30, "blue");
@@ -8,7 +8,6 @@ export default function Board() {
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   // should come from the server
   const [enemies, setEnemies] = useState<Projectile[]>([]);
-  const players = [player];
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   function getContext() {
@@ -26,14 +25,31 @@ export default function Board() {
     let intervalId: number;
     const render = () => {
       context.clearRect(0, 0, width, height);
-      players.forEach((player) => player.draw(context));
+      player.draw(context);
       projectiles.forEach((projectile) => {
         projectile.update();
         projectile.draw(context);
       });
-      enemies.forEach((enemy) => {
+      enemies.forEach((enemy, enemyIndex) => {
         enemy.update();
         enemy.draw(context);
+        if (checkCollision(player, enemy)) {
+          cancelAnimationFrame(animationId);
+          alert("game over");
+          setEnemies([]);
+          setProjectiles([]);
+        }
+        // check collision
+        projectiles.forEach((projectile, projectileIndex) => {
+          if (checkCollision(projectile, enemy)) {
+            setTimeout(() => {
+              setProjectiles((prev) =>
+                prev.filter((_, i) => i !== projectileIndex)
+              );
+              setEnemies((prev) => prev.filter((_, i) => i !== enemyIndex));
+            }, 0);
+          }
+        });
       });
       animationId = requestAnimationFrame(render);
     };
@@ -61,7 +77,7 @@ export default function Board() {
         x = Math.random() * width;
         y = height + radius;
       }
-      
+
       const velocity = getVelocity(player.y - y, player.x - x);
       const enemy = new Projectile(x, y, radius, "red", velocity);
 
@@ -75,7 +91,7 @@ export default function Board() {
       cancelAnimationFrame(animationId);
       clearInterval(intervalId);
     };
-  }, [projectiles, players, enemies]);
+  }, [projectiles, enemies]);
 
   useEffect(() => {
     function shoot(e: MouseEvent) {
