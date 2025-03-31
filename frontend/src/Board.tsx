@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Circle, Particle, Projectile } from "./core";
+import { Circle, FocusBar, Particle, Projectile } from "./core";
 import { checkCollision, getVelocity } from "./utils";
 import { gsap } from "gsap";
 
@@ -9,6 +9,8 @@ const player = new Circle(width / 2, height / 2, 30, "white");
 export default function Board() {
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [particles, setParticles] = useState<Particle[]>([]);
+  const [focus, setFocus] = useState(0);
+  const focusBar = new FocusBar(0, 0, 100, 20, 20, focus);
   // should come from the server
   const [enemies, setEnemies] = useState<Projectile[]>([]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -85,6 +87,8 @@ export default function Board() {
         particle.update();
         particle.draw(context);
       });
+      focusBar.draw(context);
+      focusBar.update(focus);
       animationId = requestAnimationFrame(render);
     };
     const spawnEnemies = () => {
@@ -130,7 +134,7 @@ export default function Board() {
   }, [projectiles, enemies, particles]);
 
   useEffect(() => {
-    function shoot(e: MouseEvent) {
+    function shoot(e: MouseEvent, prevFocus: number) {
       const { clientX, clientY } = e;
       const velocity = getVelocity(clientY - player.y, clientX - player.x, 4);
       const projectile = new Projectile(
@@ -138,16 +142,35 @@ export default function Board() {
         player.y,
         5,
         player.color,
-        velocity
+        velocity,
+        prevFocus,
+        true
       );
 
       setProjectiles((prev) => {
         return [...prev, projectile];
       });
     }
-    document.addEventListener("click", shoot);
+    let focusIntervalId: number;
+    function chargeFocus(e: MouseEvent) {
+      if (focusIntervalId) clearInterval(focusIntervalId);
+      focusIntervalId = setInterval(() => {
+        setFocus((prev) => Math.min(prev + 0.5, 20));
+      }, 100);
+    }
+    function releaseFocus(e: MouseEvent) {
+      clearInterval(focusIntervalId);
+      setFocus((prevFocus) => {
+        shoot(e, prevFocus);
+        return 0;
+      });
+    }
+    // document.addEventListener("click", shoot);
+    document.addEventListener("mousedown", chargeFocus);
+    document.addEventListener("mouseup", releaseFocus);
     return () => {
-      document.removeEventListener("click", shoot);
+      document.removeEventListener("mousedown", chargeFocus);
+      document.removeEventListener("mouseup", releaseFocus);
     };
   }, []);
 
