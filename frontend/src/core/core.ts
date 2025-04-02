@@ -41,7 +41,6 @@ export class Projectile extends Circle {
       // Apply gravity, partially counteracted by force
       // This ensures the trajectory is curved, not straight
       const gravityEffect = Math.max(gravity - this.force * 0.08, 0.016);
-      console.log(gravityEffect)
       this.velocity.y += gravityEffect;
     }
   }
