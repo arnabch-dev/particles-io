@@ -1,18 +1,21 @@
 from functools import wraps
 from system.auth import decode_access_token
 from redis import Redis
+from system.cache.cache import get_cache_from_app
+
 
 def con_event(handler):
     """
-        flow with the socket io event
-        event(connect) => wrapper(*args, **kwargs)
-        sio.event(wrapper) => registers handler for socket.io
+    flow with the socket io event
+    event(connect) => wrapper(*args, **kwargs)
+    sio.event(wrapper) => registers handler for socket.io
     """
+
     @wraps(handler)
-    async def wrapper(sid,environ,auth,*args,**kwargs):
+    async def wrapper(sid, environ, auth, *args, **kwargs):
         scope = environ.get("asgi.scope")
         app = scope.get("app")
-        cache: Redis = app.state.cache.client
+        cache = get_cache_from_app(app)
         headers = dict(scope.get("headers", []))
         # TODO: enable token verificaton
         # TODO: replace token with the decoded token
@@ -23,7 +26,7 @@ def con_event(handler):
         return await handler(
             sid,
             environ=environ,
-            user_id = user_id,
+            user_id=user_id,
             auth=auth,
             cache=cache,
             headers=headers,

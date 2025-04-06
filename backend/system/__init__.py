@@ -5,20 +5,25 @@ from contextlib import asynccontextmanager
 from .cache.cache import Cache
 from .auth import create_access_token
 
+
 @asynccontextmanager
-async def startup_event(app:FastAPI):
+async def startup_event(app: FastAPI):
     app.state.cache = Cache()
     # setting up pub sub for disconnected users
     # setting up db
     yield
     await app.state.cache.close()
 
+
 def create_app():
     app = FastAPI(lifespan=startup_event)
+
     @app.get("/id")
     def get_token():
         import uuid
-        return create_access_token({"sub":str(uuid.uuid4())})
+
+        return create_access_token({"sub": str(uuid.uuid4())})
+
     app.mount("/", app=socket_app)
     app.add_middleware(
         CORSMiddleware,

@@ -1,12 +1,14 @@
-from pydantic import BaseModel,Field
-from typing import Optional,Literal
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
 from datetime import datetime
 
+
 class Player(BaseModel):
-    sid:str
+    sid: str
     player_id: str
     username: str
     color: str
+    room_id: str
     ping_ms: Optional[float] = None  # Calculated latency
     last_sequence: Optional[int] = 0  # Last processed sequence number
     last_active: Optional[datetime] = None
@@ -14,11 +16,12 @@ class Player(BaseModel):
     velocity: Optional[dict] = Field(default_factory=dict)  # e.g., {"vx": 0, "vy": 0}
     is_connected: bool = True
 
+
 class Projectile(BaseModel):
     projectile_id: str
     owner_id: str
     # start_position: dict  # {"x": float, "y": float}
-    direction: dict        # {"x": float, "y": float} — normalized vector
+    direction: dict  # {"x": float, "y": float} — normalized vector
     speed: float
     fired_at: datetime
     sequence_number: int
