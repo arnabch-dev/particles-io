@@ -16,11 +16,13 @@ class Player(BaseModel):
     velocity: Optional[dict] = Field(default_factory=dict)  # e.g., {"vx": 0, "vy": 0}
     is_connected: bool = True
 
+
 class PlayerResponse(BaseModel):
     player_id: str
     username: str
     color: str
     position: Optional[dict] = Field(default_factory=dict)
+
 
 class Projectile(BaseModel):
     projectile_id: str

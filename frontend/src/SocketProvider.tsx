@@ -70,8 +70,8 @@ export default function SocketProvider({ children }: PropsWithChildren) {
       setIsConnected(false);
     });
 
-    newSocket.on("joined", (value: Player) => {
-      setPlayerData((prev) => [...prev, value]);
+    newSocket.on("joined", (players: Player[]) => {
+      setPlayerData(players);
     });
 
     return () => {

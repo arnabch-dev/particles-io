@@ -28,6 +28,17 @@ async def start_game_ticker(app):
                 players.append(json.loads(data.decode("utf-8")))
 
 
+async def get_all_player_details(players_cache, room):
+    players = []
+    all_players_ids = await room.get_all_players()
+    for pid in all_players_ids:
+        player = await players_cache.get_player(pid)
+        if player:
+            player = player.model_dump()
+            players.append(PlayerResponse(**player).model_dump())
+    return players
+
+
 @sio.event
 @con_event
 async def connect(sid, cache: Cache, user_id: str, *args, **kwargs):
@@ -37,21 +48,15 @@ async def connect(sid, cache: Cache, user_id: str, *args, **kwargs):
     # so make sure to send all the player details at once to all the players
 
     room = RoomCache(cache, DEFAULT_ROOM)
-    players = PlayersCache(cache)
-    # def get_all_player_details():
-    player_exists = await room.has(user_id)
-    player_data = None
-    if player_exists:
-        player_data = await players.get_player(user_id)
-    
-    if not player_data:
+    players_cache = PlayersCache(cache)
+    player_exists = await room.has(user_id) and await players_cache.get_player(user_id)
+
+    if not player_exists:
         player_details = dump_player_details(sid, user_id, DEFAULT_ROOM)
-        player_data = player_details
         await room.add_player(user_id)
-        await players.set_player(player_details)
-    
-    player_data = player_data.model_dump()
-    player_data = PlayerResponse(**player_data).model_dump()
+        await players_cache.set_player(player_details)
+
+    player_data = await get_all_player_details(players_cache, room)
     await sio.save_session(sid, {"user_id": user_id})
     await sio.emit("joined", player_data)
 
@@ -100,5 +105,14 @@ async def disconnect(sid, *args):
     Handle client disconnection.
     TODO: Clean up player from cache or mark offline.
     """
+    scope = sio.get_environ(sid).get("asgi.scope")
+    app = scope.get("app")
+    cache = get_cache_from_app(app)
     session = await sio.get_session(sid)
-    return session.get("user_id", "unknown")
+    user_id = session.get("user_id")
+    players_cache = PlayersCache(cache)
+    room = RoomCache(cache, DEFAULT_ROOM)
+    await players_cache.delete_player(user_id)
+    await room.remove_player(user_id)
+    players = await get_all_player_details(players_cache, room)
+    await sio.emit("joined", players)

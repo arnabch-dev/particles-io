@@ -16,7 +16,8 @@ class RoomCache:
 
     async def get_all_players(self):
         async with self.cache as cache:
-            return await cache.smembers(self.room_id)
+            pids = await cache.smembers(self.room_id)
+            return list(map(lambda pid: pid.decode("utf-8"), pids))
 
     async def has(self, player_id):
         async with self.cache as cache:

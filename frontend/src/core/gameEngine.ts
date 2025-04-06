@@ -65,7 +65,6 @@ export class GameEngine {
   private updateGame = () => {
     if (!this.context) return;
     if (!this.playing) return;
-
     this.context.fillStyle = "rgba(0,0,0,0.1)";
     this.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
     this.players.forEach((player) => player.draw(this.context!));
@@ -136,7 +135,13 @@ export class GameEngine {
   public getPlayer(id: string) {
     return this.players.get(id);
   }
+  public getPlayers() {
+    return Array.from(this.players.keys());
+  }
 
+  public removePlayer(id: string) {
+    this.players.delete(id);
+  }
   public start = () => {
     this.animationId = requestAnimationFrame(this.updateGame);
     if (this.gameMode === "single")

@@ -6,7 +6,7 @@ import { useSocket } from "../SocketProvider";
 
 export default function MultiplayerBoard() {
   // All hooks must be called before any conditional returns
-  const { player: playerDetails, isConnected, socket,playerId } = useSocket();
+  const { player: playerDetails, isConnected, socket, playerId } = useSocket();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [gameEngine, setGameEngine] = useState<GameEngine | null>(null);
 
@@ -58,7 +58,7 @@ export default function MultiplayerBoard() {
 
   useEffect(() => {
     if (playerDetails && gameEngine) {
-      playerDetails.forEach(player=>{
+      playerDetails.forEach((player) => {
         const newPlayer = new Circle(
           player.position.x,
           player.position.y,
@@ -66,7 +66,14 @@ export default function MultiplayerBoard() {
           player.color
         );
         gameEngine.addPlayer(player.player_id, newPlayer);
-      })
+      });
+      const playerIds = gameEngine.getPlayers();
+      const currentPlayers = new Set(
+        playerDetails.map((player) => player.player_id)
+      );
+      playerIds.forEach((playerId) => {
+        if (!currentPlayers.has(playerId)) gameEngine.removePlayer(playerId);
+      });
     }
   }, [playerDetails, gameEngine, isConnected, playerDetails]);
 

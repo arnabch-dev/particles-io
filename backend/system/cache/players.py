@@ -10,7 +10,7 @@ class PlayersCache:
         async with self.cache as cache:
             await cache.set(f"player:{player.player_id}", player.model_dump_json(), ttl)
 
-    async def get_player(self, player_id: str) -> Player:
+    async def get_player(self, player_id: str) -> Player | None:
         async with self.cache as cache:
             value = await cache.get(f"player:{player_id}")
             if not value:
