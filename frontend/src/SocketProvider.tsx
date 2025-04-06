@@ -74,6 +74,10 @@ export default function SocketProvider({ children }: PropsWithChildren) {
       setPlayerData(players);
     });
 
+    newSocket.on("update-players", (players: Player[]) => {
+      setPlayerData(players);
+    });
+
     return () => {
       newSocket.disconnect();
     };

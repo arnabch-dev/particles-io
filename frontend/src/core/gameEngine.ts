@@ -183,6 +183,7 @@ export class GameEngine {
 
   public updateFocusBar(newFocusValue: number) {
     if (!this.context) return;
+    console.log({newFocusValue})
     this.focusBar.draw(this.context);
     this.focusBar.update(newFocusValue);
   }

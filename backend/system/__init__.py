@@ -4,6 +4,8 @@ from .socket.app import socket_app
 from contextlib import asynccontextmanager
 from .cache.cache import Cache
 from .auth import create_access_token
+from system.socket.app import start_game_ticker
+import asyncio
 
 
 @asynccontextmanager
@@ -12,6 +14,7 @@ async def startup_event(app: FastAPI):
     # setting up pub sub for disconnected users
     # delete users from the users
     # setting up db
+    asyncio.create_task(start_game_ticker(app))
     yield
     await app.state.cache.close()
 

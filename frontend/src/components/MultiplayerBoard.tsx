@@ -3,7 +3,7 @@ import { GameEngine } from "../core/gameEngine";
 import { useFocus } from "../hooks/Focus";
 import { Circle } from "../core/core";
 import { useSocket } from "../SocketProvider";
-
+const SPEED = 5;
 export default function MultiplayerBoard() {
   // All hooks must be called before any conditional returns
   const { player: playerDetails, isConnected, socket, playerId } = useSocket();
@@ -28,7 +28,7 @@ export default function MultiplayerBoard() {
         true
       );
     },
-    [gameEngine, playerDetails, isConnected, playerDetails]
+    [gameEngine, playerDetails, isConnected]
   );
 
   // Use custom hook
@@ -65,6 +65,7 @@ export default function MultiplayerBoard() {
           30,
           player.color
         );
+        gameEngine.focus = focus;
         gameEngine.addPlayer(player.player_id, newPlayer);
       });
       const playerIds = gameEngine.getPlayers();
@@ -75,7 +76,7 @@ export default function MultiplayerBoard() {
         if (!currentPlayers.has(playerId)) gameEngine.removePlayer(playerId);
       });
     }
-  }, [playerDetails, gameEngine, isConnected, playerDetails]);
+  }, [playerDetails, gameEngine, isConnected]);
 
   useEffect(() => {
     if (!playerId || !gameEngine || !socket) return;
@@ -83,17 +84,23 @@ export default function MultiplayerBoard() {
     const handleKeyDown = (event: KeyboardEvent) => {
       const player = gameEngine.getPlayer(playerId)!;
       switch (event.key.toLowerCase()) {
+        // we are not using interpolation for the moving the player
+        // a kind of teleportation kind of effect if the frontend and backend mismatch
         case "w":
+          player.y-=SPEED
           socket.emit("move", "up");
           break;
         case "a":
-          socket.emit("move", "right");
+          player.x-=SPEED
+          socket.emit("move", "left");
           break;
         case "s":
+          player.y+=SPEED
           socket.emit("move", "down");
           break;
         case "d":
-          socket.emit("move", "left");
+          player.x+=SPEED
+          socket.emit("move", "right");
           break;
         default:
           break;

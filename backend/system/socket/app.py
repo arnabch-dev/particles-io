@@ -1,4 +1,4 @@
-import json
+import asyncio
 import socketio
 from .utils import dump_player_details
 from .decorators import con_event
@@ -14,20 +14,6 @@ SPEED = 5
 PLAYER_CACHE_EXPIRY = 600
 DEFAULT_ROOM = "ROOM"
 
-
-# the game simulator
-async def start_game_ticker(app):
-    cache = get_cache_from_app(app)
-    # TODO: filter keys with prefix and namespace
-    players = []
-    while True:
-        keys = await cache.keys("*")
-        if keys:
-            for key in keys:
-                data = await cache.get(key)
-                players.append(json.loads(data.decode("utf-8")))
-
-
 async def get_all_player_details(players_cache, room):
     players = []
     all_players_ids = await room.get_all_players()
@@ -38,6 +24,24 @@ async def get_all_player_details(players_cache, room):
             players.append(PlayerResponse(**player).model_dump())
     return players
 
+
+# the game simulator(15 ms)
+# Halflife uses 66.66 ticks per second
+# so in 
+async def start_game_ticker(app):
+    cache = get_cache_from_app(app)
+    players_cache = PlayersCache(cache)
+    room = RoomCache(cache,DEFAULT_ROOM)
+    # TODO: filter keys with prefix and namespace
+    while True:
+        players = await get_all_player_details(players_cache,room)
+        await sio.emit("update-players",players)
+        # keys = await cache.keys("*")
+        # if keys:
+        #     for key in keys:
+        #         data = await cache.get(key)
+        #         players.append(json.loads(data.decode("utf-8")))
+        await asyncio.sleep(0.015)
 
 @sio.event
 @con_event

@@ -13,7 +13,6 @@ class Player(BaseModel):
     last_sequence: Optional[int] = 0  # Last processed sequence number
     last_active: Optional[datetime] = None
     position: Optional[dict] = Field(default_factory=dict)  # e.g., {"x": 10, "y": 5}
-    velocity: Optional[dict] = Field(default_factory=dict)  # e.g., {"vx": 0, "vy": 0}
     is_connected: bool = True
 
 
