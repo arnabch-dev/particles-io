@@ -2,6 +2,7 @@ import json
 import socketio
 from .utils import dump_player_details
 from .decorators import con_event
+from system.models import PlayerResponse
 from system.cache.room import RoomCache
 from system.cache.players import PlayersCache
 from system.cache.cache import Cache, get_cache_from_app
@@ -37,19 +38,20 @@ async def connect(sid, cache: Cache, user_id: str, *args, **kwargs):
 
     room = RoomCache(cache, DEFAULT_ROOM)
     players = PlayersCache(cache)
-    if await room.has(user_id):
+    # def get_all_player_details():
+    player_exists = await room.has(user_id)
+    player_data = None
+    if player_exists:
         player_data = await players.get_player(user_id)
-        player_data = player_data.model_dump()
-    else:
+    
+    if not player_data:
         player_details = dump_player_details(sid, user_id, DEFAULT_ROOM)
+        player_data = player_details
         await room.add_player(user_id)
         await players.set_player(player_details)
-        player_data = {
-            "player_id": player_details.player_id,
-            "color": player_details.color,
-            "position": player_details.position,
-        }
-
+    
+    player_data = player_data.model_dump()
+    player_data = PlayerResponse(**player_data).model_dump()
     await sio.save_session(sid, {"user_id": user_id})
     await sio.emit("joined", player_data)
 

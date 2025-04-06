@@ -10,6 +10,7 @@ from .auth import create_access_token
 async def startup_event(app: FastAPI):
     app.state.cache = Cache()
     # setting up pub sub for disconnected users
+    # delete users from the users
     # setting up db
     yield
     await app.state.cache.close()

@@ -13,6 +13,8 @@ class PlayersCache:
     async def get_player(self, player_id: str) -> Player:
         async with self.cache as cache:
             value = await cache.get(f"player:{player_id}")
+            if not value:
+                return None
             value = serialise_cache_get_data(value)
             return Player(**value)
 
