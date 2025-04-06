@@ -1,7 +1,7 @@
 const startAngle = 0;
 const endAngle = Math.PI * 2; // full circle
 const gravity = 0.1;
-type Coodinate = {
+export type Coordinate = {
   x: number;
   y: number;
 };
@@ -26,7 +26,7 @@ export class Projectile extends Circle {
     y: number,
     radius: number,
     color: string,
-    public velocity: Coodinate,
+    public velocity: Coordinate,
     public force: number = 0,
     public applyGravity: boolean = false
   ) {
@@ -53,7 +53,7 @@ export class Particle extends Circle {
     y: number,
     radius: number,
     color: string,
-    public velocity: Coodinate
+    public velocity: Coordinate
   ) {
     super(x, y, radius, color);
     this.alpha = 1;

@@ -6,15 +6,19 @@ import {
   PropsWithChildren,
 } from "react";
 import { io, Socket } from "socket.io-client";
-
-
-interface Player{
-    color:string
+import { type Coordinate } from "./core/core";
+interface Player {
+  color: string;
+  player_id: string;
+  position: Coordinate;
 }
 
 interface Game {
   isConnected: boolean;
-  player:Player | null
+  player: Player[];
+  socket: Socket | null;
+  token:string,
+  playerId:string
 }
 
 const SocketContext = createContext<Game | null>(null);
@@ -26,16 +30,24 @@ export const useSocket = () => {
   return context;
 };
 
+const token = prompt("token")!;
 export default function SocketProvider({ children }: PropsWithChildren) {
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [playerData,setPlayerData] = useState<Player|null>(null)
+  const [playerData, setPlayerData] = useState<Player[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  // TODO:Making token and playerid same for ease
+  // TODO: change this to auth endpont
+  // const [token, setToken] = useState(
+  //   "8fa071ed-8d80-4d6c-a482-dd9cba652207"
+  // );
+  const [playerId,setPlayerId] = useState(token)
 
   useEffect(() => {
     const newSocket = io(import.meta.env.VITE_SOCKET_URL!, {
       path: "/socket/",
       withCredentials: true,
       transports: ["websocket"], // Using WebSockets only
+      auth: { token },
     });
 
     setSocket(newSocket);
@@ -52,9 +64,15 @@ export default function SocketProvider({ children }: PropsWithChildren) {
       setIsConnected(false);
     });
 
-    newSocket.on("joined", (value:Player) => {
-        setPlayerData(value)
-      });
+    newSocket.on("connect_error", (reason) => {
+      alert("invalid auth");
+      console.log("❌ Disconnected:", reason);
+      setIsConnected(false);
+    });
+
+    newSocket.on("joined", (value: Player) => {
+      setPlayerData((prev) => [...prev, value]);
+    });
 
     return () => {
       newSocket.disconnect();
@@ -63,7 +81,10 @@ export default function SocketProvider({ children }: PropsWithChildren) {
 
   const game: Game = {
     isConnected,
-    player:playerData
+    player: playerData,
+    socket,
+    token,
+    playerId
   };
 
   return (
