@@ -56,7 +56,10 @@ export class GameEngine {
 
     const hue = Math.random() * 360;
     const color = `hsl(${hue},50%,50%)`;
-    const velocity = getVelocity(player.y - y, player.x - x);
+    // calculating velocity between two arbitary points and not between point and origin
+    const endPoint = { x: player.x, y: player.y };
+    const startPoint = { x, y };
+    const velocity = getVelocity(startPoint, endPoint);
     const enemy = new Projectile(x, y, radius, color, velocity);
 
     this.enemies.push(enemy);
@@ -162,11 +165,7 @@ export class GameEngine {
     force?: number,
     applyGravity?: boolean
   ) => {
-    const velocity = getVelocity(
-      targetPos.y - currentPos.y,
-      targetPos.x - currentPos.x,
-      4
-    );
+    const velocity = getVelocity(currentPos, targetPos, 4);
     const player = this.players.get(id)!;
     this.projectiles.push(
       new Projectile(
@@ -183,7 +182,7 @@ export class GameEngine {
 
   public updateFocusBar(newFocusValue: number) {
     if (!this.context) return;
-    console.log({newFocusValue})
+    console.log({ newFocusValue });
     this.focusBar.draw(this.context);
     this.focusBar.update(newFocusValue);
   }

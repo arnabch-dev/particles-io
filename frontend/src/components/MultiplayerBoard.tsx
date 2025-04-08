@@ -3,10 +3,17 @@ import { GameEngine } from "../core/gameEngine";
 import { useFocus } from "../hooks/Focus";
 import { Circle } from "../core/core";
 import { useSocket } from "../SocketProvider";
+import { getAngle } from "../utils";
 const SPEED = 5;
 export default function MultiplayerBoard() {
   // All hooks must be called before any conditional returns
-  const { player: playerDetails, isConnected, socket, playerId } = useSocket();
+  const {
+    player: playerDetails,
+    isConnected,
+    socket,
+    playerId,
+    emitMovement,
+  } = useSocket();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [gameEngine, setGameEngine] = useState<GameEngine | null>(null);
 
@@ -19,7 +26,7 @@ export default function MultiplayerBoard() {
 
       const currentPos = { x: player.x, y: player.y };
       const targetPos = { x: e.clientX, y: e.clientY };
-
+      const angle = getAngle(currentPos, targetPos);
       gameEngine?.addProjectile(
         currentPos,
         targetPos,
@@ -87,20 +94,20 @@ export default function MultiplayerBoard() {
         // we are not using interpolation for the moving the player
         // a kind of teleportation kind of effect if the frontend and backend mismatch
         case "w":
-          player.y-=SPEED
-          socket.emit("move", "up");
+          player.y -= SPEED;
+          emitMovement("up");
           break;
         case "a":
-          player.x-=SPEED
-          socket.emit("move", "left");
+          player.x -= SPEED;
+          emitMovement("left");
           break;
         case "s":
-          player.y+=SPEED
-          socket.emit("move", "down");
+          player.y += SPEED;
+          emitMovement("down");
           break;
         case "d":
-          player.x+=SPEED
-          socket.emit("move", "right");
+          player.x += SPEED;
+          emitMovement("right");
           break;
         default:
           break;

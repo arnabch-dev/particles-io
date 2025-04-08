@@ -1,10 +1,20 @@
+import { type Coordinate } from "./core/core";
+export function getAngle(start: Coordinate, end: Coordinate) {
+  const x = end.x - start.x;
+  const y = end.y - start.y;
+  return Math.atan2(y, x);
+}
 // x = x_end - x_start
 // y = x_end - x_start
 // basically affinity to the ending
-export function getVelocity(y: number, x: number ,speed:number=1) {
-  const angle = Math.atan2(y, x);
+export function getVelocity(
+  start: Coordinate,
+  end: Coordinate,
+  speed: number = 1
+) {
   // v towards x= u cos(theta);u=1
   // v towards y= u sin(theta);u=1
+  const angle = getAngle(start, end);
   const velocity = {
     x: Math.cos(angle) * speed,
     y: Math.sin(angle) * speed,

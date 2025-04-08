@@ -13,13 +13,16 @@ interface Player {
   position: Coordinate;
 }
 
+type Movement = "up" | "down" | "left" | "right";
 interface Game {
   isConnected: boolean;
   player: Player[];
   socket: Socket | null;
-  token:string,
-  playerId:string
+  token: string;
+  playerId: string;
+  emitMovement:(movement:Movement)=>void
 }
+
 
 const SocketContext = createContext<Game | null>(null);
 
@@ -40,7 +43,7 @@ export default function SocketProvider({ children }: PropsWithChildren) {
   // const [token, setToken] = useState(
   //   "8fa071ed-8d80-4d6c-a482-dd9cba652207"
   // );
-  const [playerId,setPlayerId] = useState(token)
+  const [playerId, setPlayerId] = useState(token);
 
   useEffect(() => {
     const newSocket = io(import.meta.env.VITE_SOCKET_URL!, {
@@ -83,12 +86,18 @@ export default function SocketProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
+  function emitMovement(movement: Movement) {
+    if (!socket) return;
+    socket.emit("move", movement);
+  }
+
   const game: Game = {
     isConnected,
     player: playerData,
     socket,
     token,
-    playerId
+    playerId,
+    emitMovement
   };
 
   return (
