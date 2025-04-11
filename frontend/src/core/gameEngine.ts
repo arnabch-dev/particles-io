@@ -70,7 +70,9 @@ export class GameEngine {
     if (!this.playing) return;
     this.context.fillStyle = "rgba(0,0,0,0.1)";
     this.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
-    this.players.forEach((player) => player.draw(this.context!));
+    this.players.forEach((player) => {
+      player.draw(this.context!)}
+    );
 
     this.projectiles.forEach((projectile) => {
       projectile.update();

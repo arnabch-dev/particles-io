@@ -11,7 +11,7 @@ from system.cache.cache import Cache, get_cache_from_app
 sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 socket_app = socketio.ASGIApp(sio, socketio_path="/socket/")
 
-SPEED = 5
+SPEED = 30
 PLAYER_CACHE_EXPIRY = 600
 DEFAULT_ROOM = "ROOM"
 

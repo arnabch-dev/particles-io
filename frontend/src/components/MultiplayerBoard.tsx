@@ -4,7 +4,7 @@ import { useFocus } from "../hooks/Focus";
 import { Circle } from "../core/core";
 import { useSocket } from "../SocketProvider";
 import { getAngle } from "../utils";
-const SPEED = 5;
+const SPEED = 30;
 export default function MultiplayerBoard() {
   // All hooks must be called before any conditional returns
   const {
@@ -65,7 +65,7 @@ export default function MultiplayerBoard() {
         const newPlayer = new Circle(
           player.position.x,
           player.position.y,
-          30,
+          10,
           player.color
         );
         gameEngine.focus = focus;
