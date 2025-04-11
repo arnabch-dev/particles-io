@@ -26,7 +26,7 @@ Using gsap for animation -> as it provides more granular control over the values
 
 [] Adding showing trajectory to see the shooting position
 
-[] Making the player movement snappy. Update the logic of adding player -> updating the position of prev player and having a tweening between prev and current position
+[x] Making the player movement snappy. Update the logic of adding player -> updating the position of prev player and having a tweening between prev and current position
 
 ### Multiplayer
 [] Creating multiple players

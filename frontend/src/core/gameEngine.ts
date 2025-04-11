@@ -35,7 +35,19 @@ export class GameEngine {
   }
 
   public addPlayer(id: string, player: Circle) {
-    this.players.set(id, player);
+    const existing = this.getPlayer(id);
+    if (existing) {
+      // Tween from existing to the new position
+      gsap.to(existing, {
+        x: player.x,
+        y: player.y,
+        duration: 0.1,
+        ease: "bounce.in",
+      });
+    } else {
+      // Only add to the map if player is new
+      this.players.set(id, player);
+    }
   }
 
   spawnEnemies = () => {
@@ -68,11 +80,11 @@ export class GameEngine {
   private updateGame = () => {
     if (!this.context) return;
     if (!this.playing) return;
-    this.context.fillStyle = "rgba(0,0,0,0.1)";
+    this.context.fillStyle = "rgba(0,0,0,0.2)";
     this.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
     this.players.forEach((player) => {
-      player.draw(this.context!)}
-    );
+      player.draw(this.context!);
+    });
 
     this.projectiles.forEach((projectile) => {
       projectile.update();
@@ -186,8 +198,8 @@ export class GameEngine {
   public addProjectileWithAngle = (
     currentPos: Coordinate,
     id: string,
-    angle:number,
-    color:string,
+    angle: number,
+    color: string,
     force?: number,
     applyGravity?: boolean
   ) => {

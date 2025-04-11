@@ -4,6 +4,8 @@ import { useFocus } from "../hooks/Focus";
 import { Circle } from "../core/core";
 import { useSocket } from "../SocketProvider";
 import { getAngle } from "../utils";
+import gsap from "gsap";
+
 const SPEED = 30;
 export default function MultiplayerBoard() {
   // All hooks must be called before any conditional returns
@@ -96,28 +98,38 @@ export default function MultiplayerBoard() {
     if (!canvasRef.current) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       const player = gameEngine.getPlayer(playerId)!;
+      if (!player) return;
+    
+      const moveDistance = SPEED;
+      let dx = 0, dy = 0;
+    
       switch (event.key.toLowerCase()) {
-        // we are not using interpolation for the moving the player
-        // a kind of teleportation kind of effect if the frontend and backend mismatch
         case "w":
-          player.y -= SPEED;
+          dy = -moveDistance;
           emitMovement("up");
           break;
         case "a":
-          player.x -= SPEED;
+          dx = -moveDistance;
           emitMovement("left");
           break;
         case "s":
-          player.y += SPEED;
+          dy = moveDistance;
           emitMovement("down");
           break;
         case "d":
-          player.x += SPEED;
+          dx = moveDistance;
           emitMovement("right");
           break;
         default:
-          break;
+          return;
       }
+    
+      gsap.to(player, {
+        x: player.x + dx,
+        y: player.y + dy,
+        duration: 0.1,
+        ease: "bounce.in",
+      });
     };
 
     window.addEventListener("keydown", handleKeyDown);
