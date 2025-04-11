@@ -80,8 +80,10 @@ export class GameEngine {
   private updateGame = () => {
     if (!this.context) return;
     if (!this.playing) return;
-    this.context.fillStyle = "rgba(0,0,0,0.2)";
+    this.context.fillStyle = "rgba(0,0,0,0.1)";
     this.context.fillRect(0, 0, window.innerWidth, window.innerHeight);
+    // this.context.fillStyle = "black";
+    // this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.players.forEach((player) => {
       player.draw(this.context!);
     });

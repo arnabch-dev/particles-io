@@ -13,10 +13,14 @@ export class Circle {
     public color: string
   ) {}
   draw(context: CanvasRenderingContext2D) {
+    context.save()
+    context.shadowColor = this.color
+    context.shadowBlur = this.radius
     context.beginPath();
     context.arc(this.x, this.y, this.radius, startAngle, endAngle);
     context.fillStyle = this.color;
     context.fill();
+    context.restore()
   }
 }
 
