@@ -23,6 +23,20 @@ export function getVelocity(
   return velocity;
 }
 
+export function getVelocityFromAngle(
+  angle: number,
+  speed: number = 1
+) {
+  // v towards x= u cos(theta);u=1
+  // v towards y= u sin(theta);u=1
+  const velocity = {
+    x: Math.cos(angle) * speed,
+    y: Math.sin(angle) * speed,
+  };
+
+  return velocity;
+}
+
 type GameElement = { x: number; y: number; radius: number };
 export function checkCollision(obj1: GameElement, obj2: GameElement) {
   const dist = Math.hypot(obj1.x - obj2.x, obj1.y - obj2.y);

@@ -1,4 +1,4 @@
-import { checkCollision, getVelocity } from "../utils";
+import { checkCollision, getVelocity, getVelocityFromAngle } from "../utils";
 import {
   Circle,
   FocusBar,
@@ -76,6 +76,7 @@ export class GameEngine {
       projectile.update();
       projectile.draw(this.context!);
     });
+
     if (this.gameMode === "single") {
       this.enemies.forEach((enemy, enemyIndex) => {
         enemy.update();
@@ -173,6 +174,29 @@ export class GameEngine {
         currentPos.y,
         5,
         player.color,
+        velocity,
+        force,
+        applyGravity
+      )
+    );
+  };
+
+  public addProjectileWithAngle = (
+    currentPos: Coordinate,
+    id: string,
+    angle:number,
+    color:string,
+    force?: number,
+    applyGravity?: boolean
+  ) => {
+    const velocity = getVelocityFromAngle(angle, 4);
+    const player = this.players.get(id)!;
+    this.projectiles.push(
+      new Projectile(
+        currentPos.x,
+        currentPos.y,
+        5,
+        color,
         velocity,
         force,
         applyGravity

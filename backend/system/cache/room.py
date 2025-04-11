@@ -20,6 +20,8 @@ class RoomCache:
             return list(map(lambda pid: pid.decode("utf-8"), pids))
 
     async def has(self, player_id):
+        if not player_id:
+            return False
         async with self.cache as cache:
             return bool(await cache.sismember(self.room_id, player_id))
 

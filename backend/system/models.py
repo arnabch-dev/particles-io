@@ -24,14 +24,14 @@ class PlayerResponse(BaseModel):
 
 
 class Projectile(BaseModel):
-    projectile_id: str
-    owner_id: str
-    # start_position: dict  # {"x": float, "y": float}
-    direction: dict  # {"x": float, "y": float} — normalized vector
-    speed: float
-    fired_at: datetime
-    sequence_number: int
+    user_id: str
+    position: dict
+    angle: int | float
+    # fired_at: datetime
+    sequence_number: int = 0
 
+class ProjectileResponse(Projectile):
+    color: str
 
 class Activity(BaseModel):
     player_id: str

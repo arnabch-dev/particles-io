@@ -9,10 +9,12 @@ export default function MultiplayerBoard() {
   // All hooks must be called before any conditional returns
   const {
     player: playerDetails,
+    projectiles,
     isConnected,
     socket,
     playerId,
     emitMovement,
+    emitShoot,
   } = useSocket();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [gameEngine, setGameEngine] = useState<GameEngine | null>(null);
@@ -27,15 +29,9 @@ export default function MultiplayerBoard() {
       const currentPos = { x: player.x, y: player.y };
       const targetPos = { x: e.clientX, y: e.clientY };
       const angle = getAngle(currentPos, targetPos);
-      gameEngine?.addProjectile(
-        currentPos,
-        targetPos,
-        playerId,
-        focusValue,
-        true
-      );
+      emitShoot({ angle, position: currentPos });
     },
-    [gameEngine, playerDetails, isConnected]
+    [gameEngine, playerDetails, isConnected, projectiles]
   );
 
   // Use custom hook
@@ -81,6 +77,16 @@ export default function MultiplayerBoard() {
       );
       playerIds.forEach((playerId) => {
         if (!currentPlayers.has(playerId)) gameEngine.removePlayer(playerId);
+      });
+      projectiles.forEach(({ position, angle, color }) => {
+        gameEngine?.addProjectileWithAngle(
+          position,
+          playerId,
+          angle,
+          color,
+          focus,
+          true
+        );
       });
     }
   }, [playerDetails, gameEngine, isConnected]);

@@ -13,16 +13,31 @@ interface Player {
   position: Coordinate;
 }
 
+interface Projectile {
+  color: string;
+  position: Coordinate;
+  angle: number;
+}
+
 type Movement = "up" | "down" | "left" | "right";
+interface ShootingCoordinates {
+  angle: number;
+  position: {
+    x: number;
+    y: number;
+  };
+}
+
 interface Game {
   isConnected: boolean;
   player: Player[];
+  projectiles: Projectile[];
   socket: Socket | null;
   token: string;
   playerId: string;
-  emitMovement:(movement:Movement)=>void
+  emitMovement: (movement: Movement) => void;
+  emitShoot: (coordinates: ShootingCoordinates) => void;
 }
-
 
 const SocketContext = createContext<Game | null>(null);
 
@@ -37,6 +52,7 @@ const token = prompt("token")!;
 export default function SocketProvider({ children }: PropsWithChildren) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [playerData, setPlayerData] = useState<Player[]>([]);
+  const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   // TODO:Making token and playerid same for ease
   // TODO: change this to auth endpont
@@ -81,6 +97,11 @@ export default function SocketProvider({ children }: PropsWithChildren) {
       setPlayerData(players);
     });
 
+    newSocket.on("update-projectiles", (projectiles: Projectile[]) => {
+      if(projectiles.length)console.log(projectiles)
+      setProjectiles(projectiles);
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -91,13 +112,20 @@ export default function SocketProvider({ children }: PropsWithChildren) {
     socket.emit("move", movement);
   }
 
+  async function emitShoot(coordinate: ShootingCoordinates) {
+    if (!socket) return;
+    socket.emit("shoot", coordinate);
+  }
+
   const game: Game = {
     isConnected,
     player: playerData,
+    projectiles,
     socket,
     token,
     playerId,
-    emitMovement
+    emitMovement,
+    emitShoot,
   };
 
   return (
