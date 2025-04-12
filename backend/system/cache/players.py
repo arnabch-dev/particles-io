@@ -18,6 +18,19 @@ class PlayersCache:
             value = serialise_cache_get_data(value)
             return Player(**value)
 
+    async def get_players_batch(self, player_ids: list[str]) -> dict[str, Player]:
+        keys = [f"player:{pid}" for pid in player_ids]
+
+        async with self.cache as cache:
+            values = await cache.mget(keys)
+
+        result = {}
+        for pid, value in zip(player_ids, values):
+            if value:
+                parsed = serialise_cache_get_data(value)
+                result[pid] = Player(**parsed)
+        return result
+
     async def delete_player(self, player_id: str):
         async with self.cache as cache:
             await cache.delete(f"player:{player_id}")

@@ -50,12 +50,14 @@ async def sync_projectile_and_collision(app):
     projectile_cache = ProjectileCache(cache, DEFAULT_ROOM)
     projectiles = await projectile_cache.remove_projectiles()
     room = RoomCache(cache, DEFAULT_ROOM)
-    players = await get_all_player_details(players_cache, room)
+
+    player_ids = await room.get_all_players()
+    players_map = await players_cache.get_players_batch([*(uid for uid in player_ids)])
 
     projectile_response = []
     for idx, projectile in enumerate(projectiles):
         HIT = False
-        player = await players_cache.get_player(projectile.user_id)
+        player = players_map.get(projectile.user_id)
         x, y = get_velocity(projectile.angle, 4)
 
         if player:
@@ -67,18 +69,16 @@ async def sync_projectile_and_collision(app):
             ):
                 projectiles[idx] = None
                 continue
-            for cur_player in players:
-                if projectile.user_id != cur_player.get("player_id"):
+            for cur_player in players_map.values():
+                if projectile.user_id != cur_player.player_id:
                     player_element = GameElement(
-                        **cur_player.get("position"), radius=PLAYER_RADIUS
+                        **cur_player.position, radius=PLAYER_RADIUS
                     )
                     projectile_element = GameElement(
                         **projectile.position, radius=PROJECTILE_RADIUS
                     )
                     if check_collision(player_element, projectile_element):
-                        await remove_player(
-                            players_cache, room, cur_player.get("player_id")
-                        )
+                        await remove_player(players_cache, room, cur_player.player_id)
                         projectiles[idx] = None
                         HIT = True
                         continue
