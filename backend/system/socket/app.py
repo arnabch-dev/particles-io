@@ -78,6 +78,7 @@ async def sync_projectile_and_collision(app):
                         **projectile.position, radius=PROJECTILE_RADIUS
                     )
                     if check_collision(player_element, projectile_element):
+                        # TODO: reduce the radius instead of deleting directly
                         await remove_player(players_cache, room, cur_player.player_id)
                         projectiles[idx] = None
                         HIT = True

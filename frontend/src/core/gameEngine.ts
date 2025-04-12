@@ -265,6 +265,18 @@ export class GameEngine {
     this.focusBar.update(newFocusValue);
   }
 
+  public addParticles(x:number,y:number,radius:number,color:string){
+    this.particles.push(
+      ...Array.from({ length: radius }).map(() => {
+        const radius = Math.random() * 4;
+        return new Particle(x, y, radius, color, {
+          x: (Math.random() - 0.5) * radius * 2,
+          y: (Math.random() - 0.5) * radius * 2,
+        });
+      })
+    );
+  }
+
   public addTrajectoryVisualiser(
     targetX: number,
     targetY: number,

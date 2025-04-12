@@ -81,7 +81,11 @@ export default function MultiplayerBoard() {
         playerDetails.map((player) => player.player_id)
       );
       playerIds.forEach((playerId) => {
-        if (!currentPlayers.has(playerId)) gameEngine.removePlayer(playerId);
+        if (!currentPlayers.has(playerId)){
+          const player = gameEngine.getPlayer(playerId)!;
+          gameEngine.addParticles(player.x,player.y,player.radius,player.color)
+          gameEngine.removePlayer(playerId)
+          };
       });
 
       projectiles.forEach(({ position, angle, color, projectile_id }) => {
@@ -97,7 +101,11 @@ export default function MultiplayerBoard() {
       const projectileIds = gameEngine.getProjectiles();
       const currentProjectiles = new Set(projectiles.map(projectile=>projectile.projectile_id))
       projectileIds.forEach(projectileId=>{
-        if(!currentProjectiles.has(projectileId)) gameEngine.removeProjectile(projectileId)
+        if(!currentProjectiles.has(projectileId)){
+          const projectile = gameEngine.getProjectile(projectileId)!;
+          gameEngine.addParticles(projectile.x,projectile.y,projectile.radius,projectile.color)
+          gameEngine.removeProjectile(projectileId)  
+        }
       })
     }
   }, [playerDetails, gameEngine, isConnected]);
