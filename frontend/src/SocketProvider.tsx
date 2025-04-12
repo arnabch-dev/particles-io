@@ -17,6 +17,7 @@ interface Projectile {
   color: string;
   position: Coordinate;
   angle: number;
+  projectile_id: string;
 }
 
 type Movement = "up" | "down" | "left" | "right";
@@ -35,6 +36,7 @@ interface Game {
   socket: Socket | null;
   token: string;
   playerId: string;
+  resetProjetiles: () => void;
   emitMovement: (movement: Movement) => void;
   emitShoot: (coordinates: ShootingCoordinates) => void;
 }
@@ -60,6 +62,10 @@ export default function SocketProvider({ children }: PropsWithChildren) {
   //   "8fa071ed-8d80-4d6c-a482-dd9cba652207"
   // );
   const [playerId, setPlayerId] = useState(token);
+
+  function resetProjetiles() {
+    setProjectiles([]);
+  }
 
   useEffect(() => {
     const newSocket = io(import.meta.env.VITE_SOCKET_URL!, {
@@ -97,9 +103,8 @@ export default function SocketProvider({ children }: PropsWithChildren) {
       setPlayerData(players);
     });
 
-    newSocket.on("update-projectiles", (projectiles: Projectile[]) => {
-      if(projectiles.length)console.log(projectiles)
-      setProjectiles(projectiles);
+    newSocket.on("update-projectiles", (newProjectiles: Projectile[]) => {
+      setProjectiles(newProjectiles);
     });
 
     return () => {
@@ -126,6 +131,7 @@ export default function SocketProvider({ children }: PropsWithChildren) {
     playerId,
     emitMovement,
     emitShoot,
+    resetProjetiles,
   };
 
   return (

@@ -7,7 +7,7 @@ import {
   type Coordinate,
 } from "./core";
 import { gsap } from "gsap";
-const radius = 30;
+
 export class GameEngine {
   private context: CanvasRenderingContext2D | null = null;
   private animationId: number | null = null;
@@ -15,6 +15,7 @@ export class GameEngine {
   private players: Map<string, Circle>;
   private enemies: Projectile[] = [];
   private projectiles: Projectile[] = [];
+  private projectilesWithIDs: Map<string, Projectile>;
   private particles: Particle[] = [];
   private focusBar: FocusBar;
   private onGameOver: () => void;
@@ -31,6 +32,7 @@ export class GameEngine {
     this.onGameOver = onGameOver;
     this.gameMode = gameMode;
     this.players = new Map();
+    this.projectilesWithIDs = new Map();
     this.playing = true;
   }
 
@@ -88,12 +90,21 @@ export class GameEngine {
       player.draw(this.context!);
     });
 
-    this.projectiles.forEach((projectile) => {
-      projectile.update();
-      projectile.draw(this.context!);
+    const projectiles = this.getProjectiles();
+    projectiles.forEach((projectileId) => {
+      // we need update to avoid multiple draws
+      // rather update the position of the previous draw and then draw
+      const projectile = this.getProjectile(projectileId);
+      if (projectile) projectile.draw(this.context!);
     });
 
     if (this.gameMode === "single") {
+      this.projectiles.forEach((projectile) => {
+        // we need update to avoid multiple draws
+        // rather update the position of the previous draw and then draw
+        projectile.update();
+        projectile.draw(this.context!);
+      });
       this.enemies.forEach((enemy, enemyIndex) => {
         enemy.update();
         enemy.draw(this.context!);
@@ -162,6 +173,25 @@ export class GameEngine {
   public removePlayer(id: string) {
     this.players.delete(id);
   }
+
+  public getProjectiles() {
+    if (this.gameMode !== "multiplayer")
+      throw new Error("Not multiplayer mode");
+    return Array.from(this.projectilesWithIDs.keys());
+  }
+
+  public getProjectile(id: string) {
+    if (this.gameMode !== "multiplayer")
+      throw new Error("Not multiplayer mode");
+    return this.projectilesWithIDs.get(id);
+  }
+
+  public removeProjectile(id: string) {
+    if (this.gameMode !== "multiplayer")
+      throw new Error("Not multiplayer mode");
+    this.projectilesWithIDs.delete(id);
+  }
+
   public start = () => {
     this.animationId = requestAnimationFrame(this.updateGame);
     if (this.gameMode === "single")
@@ -197,27 +227,35 @@ export class GameEngine {
     );
   };
 
-  public addProjectileWithAngle = (
+  public addProjectileWithIdAndAngle = (
     currentPos: Coordinate,
-    id: string,
+    projectileId: string,
     angle: number,
     color: string,
     force?: number,
     applyGravity?: boolean
   ) => {
+    if (this.gameMode !== "multiplayer")
+      throw new Error("Not multiplayer mode");
     const velocity = getVelocityFromAngle(angle, 4);
-    const player = this.players.get(id)!;
-    this.projectiles.push(
-      new Projectile(
-        currentPos.x,
-        currentPos.y,
-        5,
-        color,
-        velocity,
-        force,
-        applyGravity
-      )
-    );
+    const projectile = this.getProjectile(projectileId);
+    if (projectile) {
+      projectile.x = currentPos.x;
+      projectile.y = currentPos.y;
+    } else {
+      this.projectilesWithIDs.set(
+        projectileId,
+        new Projectile(
+          currentPos.x,
+          currentPos.y,
+          5,
+          color,
+          velocity,
+          force,
+          applyGravity
+        )
+      );
+    }
   };
 
   public updateFocusBar(newFocusValue: number) {

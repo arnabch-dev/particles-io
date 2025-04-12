@@ -1,6 +1,6 @@
 import asyncio
 import socketio
-from .utils import dump_player_details
+from .utils import dump_player_details, get_velocity,get_random_id
 from .decorators import con_event
 from system.models import PlayerResponse, Projectile, ProjectileResponse
 from system.cache.room import RoomCache
@@ -12,6 +12,7 @@ sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 socket_app = socketio.ASGIApp(sio, socketio_path="/socket/")
 
 SPEED = 30
+GRAVITY = 0.016
 PLAYER_CACHE_EXPIRY = 600
 DEFAULT_ROOM = "ROOM"
 
@@ -34,17 +35,38 @@ async def sync_player_movement(app):
     players = await get_all_player_details(players_cache, room)
     await sio.emit("update-players", players)
 
+
 async def sync_projectile(app):
     cache = get_cache_from_app(app)
     players_cache = PlayersCache(cache)
-    projectile_cache = ProjectileCache(cache,DEFAULT_ROOM)
+    projectile_cache = ProjectileCache(cache, DEFAULT_ROOM)
     projectiles = await projectile_cache.remove_projectiles()
     projectile_response = []
-    for projectile in projectiles:
+    for idx, projectile in enumerate(projectiles):
         player = await players_cache.get_player(projectile.user_id)
+        x, y = get_velocity(projectile.angle,4)
+
         if player:
-            projectile_response.append(ProjectileResponse(**projectile.model_dump(),color=player.color).model_dump())
-    await sio.emit("update-projectiles",projectile_response)
+            projectile.position["x"] += x
+            projectile.position["y"] += y + GRAVITY
+            if abs(projectile.position["x"]) > 1024 or abs(projectile.position["y"]) > 1024:
+                projectiles[idx] = None
+                continue
+            projectile_response.append(
+                ProjectileResponse(
+                    **projectile.model_dump(), color=player.color
+                ).model_dump()
+            )
+            projectiles[idx] = projectile
+        else:
+            projectiles[idx] = None
+    # Push updated projectiles back to the front of the queue
+    for projectile in projectiles[::-1]:
+        if projectile:
+            await projectile_cache.push_to_front(projectile)
+
+    await sio.emit("update-projectiles", projectile_response)
+
 
 # the game simulator(15 ms)
 # Halflife uses 66.66 ticks per second
@@ -114,7 +136,7 @@ async def shoot(sid, projectile: dict, *args, **kwargs):
     session = await sio.get_session(sid)
     user_id = session.get("user_id")
     cache = get_cache_from_app(app)
-    user_projectile = Projectile(**projectile, user_id=user_id)
+    user_projectile = Projectile(**projectile, user_id=user_id, projectile_id=get_random_id())
     projectile_cache = ProjectileCache(cache, DEFAULT_ROOM)
     await projectile_cache.add_projectile(user_projectile)
 

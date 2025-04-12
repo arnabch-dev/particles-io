@@ -35,6 +35,12 @@ Using gsap for animation -> as it provides more granular control over the values
 
 [] Showing each player scores
 
+### How game engine is working in frontend?
+Basically it is taking items and drawing on canvas at every interval.
+* Thats why canvas is getting cleared before drawing any thing
+* Thats having old objects in the state is not producing good movements
+* Thats why when receiving updates from server first reconsile with the player and projectile present and update their position instead of adding new again
+
 ### How fillRect is working and giving the fading effect
 Does fillRect Apply to Previous Frames or the Whole Canvas?
 fillRect(0, 0, width, height) applies to the whole canvas, not just the previous frames.

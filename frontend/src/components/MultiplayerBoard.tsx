@@ -17,6 +17,7 @@ export default function MultiplayerBoard() {
     playerId,
     emitMovement,
     emitShoot,
+    resetProjetiles,
   } = useSocket();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [gameEngine, setGameEngine] = useState<GameEngine | null>(null);
@@ -24,6 +25,7 @@ export default function MultiplayerBoard() {
   // Stable reference to handle shooting
   const handleShoot = useCallback(
     (e: MouseEvent, focusValue: number) => {
+      console.log("shooting");
       if (!playerDetails) return;
       const player = gameEngine?.getPlayer(playerId);
       if (!player) return;
@@ -61,6 +63,7 @@ export default function MultiplayerBoard() {
     return () => engine.stop();
   }, [playerId, isConnected]);
 
+  // for adding removing players and projetiles from the screen
   useEffect(() => {
     if (playerDetails && gameEngine) {
       playerDetails.forEach((player) => {
@@ -80,16 +83,22 @@ export default function MultiplayerBoard() {
       playerIds.forEach((playerId) => {
         if (!currentPlayers.has(playerId)) gameEngine.removePlayer(playerId);
       });
-      projectiles.forEach(({ position, angle, color }) => {
-        gameEngine?.addProjectileWithAngle(
+
+      projectiles.forEach(({ position, angle, color, projectile_id }) => {
+        gameEngine?.addProjectileWithIdAndAngle(
           position,
-          playerId,
+          projectile_id,
           angle,
           color,
           focus,
           true
         );
       });
+      const projectileIds = gameEngine.getProjectiles();
+      const currentProjectiles = new Set(projectiles.map(projectile=>projectile.projectile_id))
+      projectileIds.forEach(projectileId=>{
+        if(!currentProjectiles.has(projectileId)) gameEngine.removeProjectile(projectileId)
+      })
     }
   }, [playerDetails, gameEngine, isConnected]);
 
@@ -99,10 +108,11 @@ export default function MultiplayerBoard() {
     const handleKeyDown = (event: KeyboardEvent) => {
       const player = gameEngine.getPlayer(playerId)!;
       if (!player) return;
-    
+
       const moveDistance = SPEED;
-      let dx = 0, dy = 0;
-    
+      let dx = 0,
+        dy = 0;
+
       switch (event.key.toLowerCase()) {
         case "w":
           dy = -moveDistance;
@@ -123,7 +133,7 @@ export default function MultiplayerBoard() {
         default:
           return;
       }
-    
+
       gsap.to(player, {
         x: player.x + dx,
         y: player.y + dy,

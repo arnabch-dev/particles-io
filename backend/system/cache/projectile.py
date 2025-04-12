@@ -14,7 +14,7 @@ class ProjectileCache:
                 self.projectile_queue_id, projectile.model_dump_json()
             )
 
-    async def remove_projectiles(self)->list[Projectile]:
+    async def remove_projectiles(self) -> list[Projectile]:
         async with self.cache as cache:
             size = await cache.llen(self.projectile_queue_id)
             projectile_list = await cache.lpop(self.projectile_queue_id, size)
@@ -25,3 +25,7 @@ class ProjectileCache:
                 projectile = serialise_cache_get_data(projectile)
                 projectiles.append(Projectile(**projectile))
             return projectiles
+
+    async def push_to_front(self, projectile: Projectile):
+        async with self.cache as cache:
+            await cache.lpush(self.projectile_queue_id, projectile.model_dump_json())

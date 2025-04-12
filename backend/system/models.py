@@ -24,14 +24,17 @@ class PlayerResponse(BaseModel):
 
 
 class Projectile(BaseModel):
+    projectile_id: str # needed for the frontend to reconsile
     user_id: str
     position: dict
     angle: int | float
     # fired_at: datetime
     sequence_number: int = 0
 
+
 class ProjectileResponse(Projectile):
     color: str
+
 
 class Activity(BaseModel):
     player_id: str

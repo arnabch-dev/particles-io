@@ -1,4 +1,4 @@
-import hashlib, random
+import hashlib, random, math ,uuid
 from ..models import Player
 
 
@@ -27,3 +27,13 @@ def dump_player_details(sid, id, room_id, username=""):
         position={"x": x, "y": y},
     )
     return player_details
+
+
+def get_velocity(angle, speed=1):
+    y_direction = math.sin(angle) * speed
+    x_direction = math.cos(angle) * speed
+    return x_direction, y_direction
+
+
+def get_random_id():
+    return uuid.uuid4().hex
