@@ -16,7 +16,8 @@ GRAVITY = 0.016
 PLAYER_CACHE_EXPIRY = 600
 PLAYER_RADIUS = 10
 PROJECTILE_RADIUS = 5
-DIMENSION = 1024
+DIMENSION_MIN = 10
+DIMENSION_MAX = 824
 DEFAULT_ROOM = "ROOM"
 
 
@@ -63,9 +64,8 @@ async def sync_projectile_and_collision(app):
         if player:
             projectile.position["x"] += x
             projectile.position["y"] += y + GRAVITY
-            if (
-                abs(projectile.position["x"]) >= DIMENSION
-                or abs(projectile.position["y"]) >= DIMENSION
+            if not (DIMENSION_MIN <= projectile.position["x"] <= DIMENSION_MAX) or not (
+                DIMENSION_MIN <= projectile.position["y"] <= DIMENSION_MAX
             ):
                 projectiles[idx] = None
                 continue
@@ -148,13 +148,13 @@ async def move(sid, direction: str, *args):
     position = player.position
 
     if direction == "up":
-        position["y"] -= SPEED
+        position["y"] = max(position["y"] - SPEED, DIMENSION_MIN)
     elif direction == "down":
-        position["y"] += SPEED
+        position["y"] = min(position["y"] + SPEED, DIMENSION_MAX)
     elif direction == "left":
-        position["x"] -= SPEED
+        position["x"] = max(position["x"] - SPEED, DIMENSION_MIN)
     elif direction == "right":
-        position["x"] += SPEED
+        position["x"] = min(position["x"] + SPEED, DIMENSION_MAX)
 
     player.position = position
 
