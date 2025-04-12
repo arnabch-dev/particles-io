@@ -24,7 +24,7 @@ class PlayerResponse(BaseModel):
 
 
 class Projectile(BaseModel):
-    projectile_id: str # needed for the frontend to reconsile
+    projectile_id: str  # needed for the frontend to reconsile
     user_id: str
     position: dict
     angle: int | float
@@ -50,3 +50,9 @@ class RateLimit(BaseModel):
     shoot_events: int = 0
     last_checked: datetime
     cooldown_until: Optional[datetime] = None
+
+
+class GameElement(BaseModel):
+    x: float
+    y: float
+    radius: int

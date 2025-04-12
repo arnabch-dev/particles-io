@@ -1,5 +1,5 @@
-import hashlib, random, math ,uuid
-from ..models import Player
+import hashlib, random, math, uuid
+from ..models import Player, GameElement
 
 
 def get_unique_color_by_sid(sid):
@@ -37,3 +37,8 @@ def get_velocity(angle, speed=1):
 
 def get_random_id():
     return uuid.uuid4().hex
+
+
+def check_collision(obj1: GameElement, obj2: GameElement):
+    dist = math.hypot(obj1.x - obj2.x, obj1.y - obj2.y)
+    return dist - obj1.radius - obj2.radius < 1

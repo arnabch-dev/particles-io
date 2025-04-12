@@ -1,8 +1,8 @@
 import asyncio
 import socketio
-from .utils import dump_player_details, get_velocity,get_random_id
+from .utils import dump_player_details, get_velocity, get_random_id, check_collision
 from .decorators import con_event
-from system.models import PlayerResponse, Projectile, ProjectileResponse
+from system.models import PlayerResponse, Projectile, ProjectileResponse, GameElement
 from system.cache.room import RoomCache
 from system.cache.players import PlayersCache
 from system.cache.projectile import ProjectileCache
@@ -14,10 +14,13 @@ socket_app = socketio.ASGIApp(sio, socketio_path="/socket/")
 SPEED = 30
 GRAVITY = 0.016
 PLAYER_CACHE_EXPIRY = 600
+PLAYER_RADIUS = 10
+PROJECTILE_RADIUS = 5
+DIMENSION = 1024
 DEFAULT_ROOM = "ROOM"
 
 
-async def get_all_player_details(players_cache, room):
+async def get_all_player_details(players_cache, room) -> list:
     players = []
     all_players_ids = await room.get_all_players()
     for pid in all_players_ids:
@@ -28,6 +31,11 @@ async def get_all_player_details(players_cache, room):
     return players
 
 
+async def remove_player(players_cache, room, user_id):
+    await players_cache.delete_player(user_id)
+    await room.remove_player(user_id)
+
+
 async def sync_player_movement(app):
     cache = get_cache_from_app(app)
     players_cache = PlayersCache(cache)
@@ -36,28 +44,51 @@ async def sync_player_movement(app):
     await sio.emit("update-players", players)
 
 
-async def sync_projectile(app):
+async def sync_projectile_and_collision(app):
     cache = get_cache_from_app(app)
     players_cache = PlayersCache(cache)
     projectile_cache = ProjectileCache(cache, DEFAULT_ROOM)
     projectiles = await projectile_cache.remove_projectiles()
+    room = RoomCache(cache, DEFAULT_ROOM)
+    players = await get_all_player_details(players_cache, room)
+
     projectile_response = []
     for idx, projectile in enumerate(projectiles):
+        HIT = False
         player = await players_cache.get_player(projectile.user_id)
-        x, y = get_velocity(projectile.angle,4)
+        x, y = get_velocity(projectile.angle, 4)
 
         if player:
             projectile.position["x"] += x
             projectile.position["y"] += y + GRAVITY
-            if abs(projectile.position["x"]) > 1024 or abs(projectile.position["y"]) > 1024:
+            if (
+                abs(projectile.position["x"]) >= DIMENSION
+                or abs(projectile.position["y"]) >= DIMENSION
+            ):
                 projectiles[idx] = None
                 continue
-            projectile_response.append(
-                ProjectileResponse(
-                    **projectile.model_dump(), color=player.color
-                ).model_dump()
-            )
-            projectiles[idx] = projectile
+            for cur_player in players:
+                if projectile.user_id != cur_player.get("player_id"):
+                    player_element = GameElement(
+                        **cur_player.get("position"), radius=PLAYER_RADIUS
+                    )
+                    projectile_element = GameElement(
+                        **projectile.position, radius=PROJECTILE_RADIUS
+                    )
+                    if check_collision(player_element, projectile_element):
+                        await remove_player(
+                            players_cache, room, cur_player.get("player_id")
+                        )
+                        projectiles[idx] = None
+                        HIT = True
+                        continue
+            if not HIT:
+                projectile_response.append(
+                    ProjectileResponse(
+                        **projectile.model_dump(), color=player.color
+                    ).model_dump()
+                )
+                projectiles[idx] = projectile
         else:
             projectiles[idx] = None
     # Push updated projectiles back to the front of the queue
@@ -75,7 +106,7 @@ async def start_game_ticker(app):
     # TODO: filter keys with prefix and namespace
     while True:
         await sync_player_movement(app)
-        await sync_projectile(app)
+        await sync_projectile_and_collision(app)
         await asyncio.sleep(0.015)
 
 
@@ -136,7 +167,9 @@ async def shoot(sid, projectile: dict, *args, **kwargs):
     session = await sio.get_session(sid)
     user_id = session.get("user_id")
     cache = get_cache_from_app(app)
-    user_projectile = Projectile(**projectile, user_id=user_id, projectile_id=get_random_id())
+    user_projectile = Projectile(
+        **projectile, user_id=user_id, projectile_id=get_random_id()
+    )
     projectile_cache = ProjectileCache(cache, DEFAULT_ROOM)
     await projectile_cache.add_projectile(user_projectile)
 
@@ -155,7 +188,6 @@ async def disconnect(sid, *args):
     user_id = session.get("user_id")
     players_cache = PlayersCache(cache)
     room = RoomCache(cache, DEFAULT_ROOM)
-    await players_cache.delete_player(user_id)
-    await room.remove_player(user_id)
+    await remove_player(players_cache, room, user_id)
     players = await get_all_player_details(players_cache, room)
     await sio.emit("joined", players)
