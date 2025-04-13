@@ -50,8 +50,8 @@ export const useSocket = () => {
   return context;
 };
 
-const token = prompt("token")!;
 export default function SocketProvider({ children }: PropsWithChildren) {
+  const token = prompt("token")!;
   const [socket, setSocket] = useState<Socket | null>(null);
   const [playerData, setPlayerData] = useState<Player[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
