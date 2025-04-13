@@ -11,7 +11,10 @@ export default function AuthProvider({
     <Auth0Provider
       domain={AUTH_DOMAIN}
       clientId={AUTH_CLIENT_ID}
-      authorizationParams={{ redirect_uri }}
+      authorizationParams={{
+        redirect_uri,
+        audience: import.meta.env.VITE_AUTH0_API_AUDIENCE,
+      }}
     >
       {children}
     </Auth0Provider>

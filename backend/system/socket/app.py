@@ -113,12 +113,10 @@ async def start_game_ticker(app):
 
 @sio.event
 @con_event
-async def connect(sid, cache: Cache, user_id: str, *args, **kwargs):
-    """Handle new client connection."""
+async def connect(sid, cache: Cache, user_id: str, token: str, *args, **kwargs):
     # TODO: make sure to have queuing logic
     # no new player cant' join a new room
     # so make sure to send all the player details at once to all the players
-
     room = RoomCache(cache, DEFAULT_ROOM)
     players_cache = PlayersCache(cache)
     player_exists = await room.has(user_id) and await players_cache.get_player(user_id)

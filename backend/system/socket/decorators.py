@@ -1,5 +1,5 @@
 from functools import wraps
-from system.auth import decode_access_token
+from system.auth import VerifyToken
 from redis import Redis
 from system.cache.cache import get_cache_from_app
 
@@ -22,7 +22,10 @@ def con_event(handler):
         # user_id = decode_access_token(token=auth.get("token"))
         # if not token:
         #     raise ConnectionRefusedError("No token present")
-        user_id = auth.get("token")
+        authorisation = VerifyToken()
+        token = auth.get("token")
+        user_auth_data = await authorisation.verify(token)
+        user_id = user_auth_data.get("sub")
         return await handler(
             sid,
             environ=environ,
@@ -32,6 +35,7 @@ def con_event(handler):
             headers=headers,
             scope=scope,
             app=app,
+            token=token,
             *args,
             **kwargs
         )

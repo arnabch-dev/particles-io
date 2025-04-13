@@ -7,6 +7,8 @@ import {
 } from "react";
 import { io, Socket } from "socket.io-client";
 import { type Coordinate } from "./core/core";
+import { useAuth0 } from "@auth0/auth0-react";
+
 interface Player {
   color: string;
   player_id: string;
@@ -21,6 +23,7 @@ interface Projectile {
 }
 
 type Movement = "up" | "down" | "left" | "right";
+
 interface ShootingCoordinates {
   angle: number;
   position: {
@@ -34,8 +37,8 @@ interface Game {
   player: Player[];
   projectiles: Projectile[];
   socket: Socket | null;
-  token: string;
-  playerId: string;
+  token: string | null;
+  playerId: string | null;
   resetProjetiles: () => void;
   emitMovement: (movement: Movement) => void;
   emitShoot: (coordinates: ShootingCoordinates) => void;
@@ -45,53 +48,65 @@ const SocketContext = createContext<Game | null>(null);
 
 export const useSocket = () => {
   const context = useContext(SocketContext);
-  if (!context)
-    throw new Error("useSocket must be used within a SocketProvider");
+  if (!context) throw new Error("useSocket must be used within a SocketProvider");
   return context;
 };
 
 export default function SocketProvider({ children }: PropsWithChildren) {
-  const token = prompt("token")!;
   const [socket, setSocket] = useState<Socket | null>(null);
   const [playerData, setPlayerData] = useState<Player[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  // TODO:Making token and playerid same for ease
-  // TODO: change this to auth endpont
-  // const [token, setToken] = useState(
-  //   "8fa071ed-8d80-4d6c-a482-dd9cba652207"
-  // );
-  const [playerId, setPlayerId] = useState(token);
+
+  const { getIdTokenClaims, getAccessTokenSilently, isAuthenticated, user } = useAuth0();
+
+  const [token, setToken] = useState<string | null>(null);
+  const [playerId, setPlayerId] = useState<string | null>(null);
 
   function resetProjetiles() {
     setProjectiles([]);
   }
 
+  // Get Auth0 token and player ID after login
   useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    async function fetchToken() {
+      const claims = await getAccessTokenSilently();
+      if (!claims || !user) return;
+      setPlayerId(user?.sub as string);
+      setToken(claims as string);
+    }
+
+    fetchToken();
+  }, [isAuthenticated, getAccessTokenSilently, user]);
+
+  // Initialize socket connection after token is set
+  useEffect(() => {
+    if (!token || !user) return;
+
     const newSocket = io(import.meta.env.VITE_SOCKET_URL!, {
       path: "/socket/",
       withCredentials: true,
-      transports: ["websocket"], // Using WebSockets only
+      transports: ["websocket"],
       auth: { token },
     });
 
     setSocket(newSocket);
 
-    // Handle connection
     newSocket.on("connect", () => {
       console.log("✅ Connected to socket:", newSocket.id);
       setIsConnected(true);
     });
 
-    // Handle disconnection
     newSocket.on("disconnect", (reason) => {
       console.log("❌ Disconnected:", reason);
       setIsConnected(false);
     });
 
     newSocket.on("connect_error", (reason) => {
-      alert("invalid auth");
-      console.log("❌ Disconnected:", reason);
+      alert("❌ Socket connect error: Invalid auth");
+      console.error(reason);
       setIsConnected(false);
     });
 
@@ -110,15 +125,15 @@ export default function SocketProvider({ children }: PropsWithChildren) {
     return () => {
       newSocket.disconnect();
     };
-  }, []);
+  }, [token,user]);
 
   function emitMovement(movement: Movement) {
-    if (!socket) return;
+    if (!socket || !socket.connected) return;
     socket.emit("move", movement);
   }
 
-  async function emitShoot(coordinate: ShootingCoordinates) {
-    if (!socket) return;
+  function emitShoot(coordinate: ShootingCoordinates) {
+    if (!socket || !socket.connected) return;
     socket.emit("shoot", coordinate);
   }
 
@@ -134,7 +149,5 @@ export default function SocketProvider({ children }: PropsWithChildren) {
     resetProjetiles,
   };
 
-  return (
-    <SocketContext.Provider value={game}>{children}</SocketContext.Provider>
-  );
+  return <SocketContext.Provider value={game}>{children}</SocketContext.Provider>;
 }

@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from .socket.app import socket_app
 from contextlib import asynccontextmanager
 from .cache.cache import Cache
-from .auth import create_access_token
 from system.socket.app import start_game_ticker
 import asyncio
 
@@ -21,12 +20,6 @@ async def startup_event(app: FastAPI):
 
 def create_app():
     app = FastAPI(lifespan=startup_event)
-
-    @app.get("/id")
-    def get_token():
-        import uuid
-
-        return create_access_token({"sub": str(uuid.uuid4())})
 
     app.mount("/", app=socket_app)
     app.add_middleware(
