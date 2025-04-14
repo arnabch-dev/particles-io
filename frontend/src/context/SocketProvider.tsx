@@ -6,8 +6,9 @@ import {
   PropsWithChildren,
 } from "react";
 import { io, Socket } from "socket.io-client";
-import { type Coordinate } from "./core/core";
+import { type Coordinate } from "../core/core";
 import { useAuth0 } from "@auth0/auth0-react";
+import Loader from "../components/Loader";
 
 interface Player {
   color: string;
@@ -48,7 +49,8 @@ const SocketContext = createContext<Game | null>(null);
 
 export const useSocket = () => {
   const context = useContext(SocketContext);
-  if (!context) throw new Error("useSocket must be used within a SocketProvider");
+  if (!context)
+    throw new Error("useSocket must be used within a SocketProvider");
   return context;
 };
 
@@ -58,7 +60,8 @@ export default function SocketProvider({ children }: PropsWithChildren) {
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [isConnected, setIsConnected] = useState(false);
 
-  const { getIdTokenClaims, getAccessTokenSilently, isAuthenticated, user } = useAuth0();
+  const { getIdTokenClaims, getAccessTokenSilently, isAuthenticated, user } =
+    useAuth0();
 
   const [token, setToken] = useState<string | null>(null);
   const [playerId, setPlayerId] = useState<string | null>(null);
@@ -125,7 +128,7 @@ export default function SocketProvider({ children }: PropsWithChildren) {
     return () => {
       newSocket.disconnect();
     };
-  }, [token,user]);
+  }, [token, user]);
 
   function emitMovement(movement: Movement) {
     if (!socket || !socket.connected) return;
@@ -149,5 +152,9 @@ export default function SocketProvider({ children }: PropsWithChildren) {
     resetProjetiles,
   };
 
-  return <SocketContext.Provider value={game}>{children}</SocketContext.Provider>;
+  return (
+    <SocketContext.Provider value={game}>
+      {socket?.connected ? children : <Loader text="Connecting to lobby...." />}
+    </SocketContext.Provider>
+  );
 }

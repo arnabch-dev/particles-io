@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { GameEngine } from "../core/gameEngine";
-import { useFocus } from "../hooks/Focus";
-import { Circle } from "../core/core";
-import { useSocket } from "../SocketProvider";
-import { getAngle } from "../utils";
+import { GameEngine } from "../../../core/gameEngine";
 import gsap from "gsap";
+import { useSocket } from "../../../context/SocketProvider";
+import { Circle } from "../../../core/core";
+import { useFocus } from "../../../hooks/Focus";
+import { getAngle } from "../../../utils";
 
 const SPEED = 30;
 export default function MultiplayerBoard() {
@@ -25,8 +25,7 @@ export default function MultiplayerBoard() {
   // Stable reference to handle shooting
   const handleShoot = useCallback(
     (e: MouseEvent, focusValue: number) => {
-      console.log("shooting");
-      if (!playerDetails) return;
+      if (!playerDetails || !playerId) return;
       const player = gameEngine?.getPlayer(playerId);
       if (!player) return;
 
@@ -81,11 +80,16 @@ export default function MultiplayerBoard() {
         playerDetails.map((player) => player.player_id)
       );
       playerIds.forEach((playerId) => {
-        if (!currentPlayers.has(playerId)){
+        if (!currentPlayers.has(playerId)) {
           const player = gameEngine.getPlayer(playerId)!;
-          gameEngine.addParticles(player.x,player.y,player.radius,player.color)
-          gameEngine.removePlayer(playerId)
-          };
+          gameEngine.addParticles(
+            player.x,
+            player.y,
+            player.radius,
+            player.color
+          );
+          gameEngine.removePlayer(playerId);
+        }
       });
 
       projectiles.forEach(({ position, angle, color, projectile_id }) => {
@@ -99,14 +103,21 @@ export default function MultiplayerBoard() {
         );
       });
       const projectileIds = gameEngine.getProjectiles();
-      const currentProjectiles = new Set(projectiles.map(projectile=>projectile.projectile_id))
-      projectileIds.forEach(projectileId=>{
-        if(!currentProjectiles.has(projectileId)){
+      const currentProjectiles = new Set(
+        projectiles.map((projectile) => projectile.projectile_id)
+      );
+      projectileIds.forEach((projectileId) => {
+        if (!currentProjectiles.has(projectileId)) {
           const projectile = gameEngine.getProjectile(projectileId)!;
-          gameEngine.addParticles(projectile.x,projectile.y,projectile.radius,projectile.color)
-          gameEngine.removeProjectile(projectileId)  
+          gameEngine.addParticles(
+            projectile.x,
+            projectile.y,
+            projectile.radius,
+            projectile.color
+          );
+          gameEngine.removeProjectile(projectileId);
         }
-      })
+      });
     }
   }, [playerDetails, gameEngine, isConnected]);
 

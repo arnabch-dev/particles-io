@@ -96,11 +96,6 @@
     @apply border-border;
   }
 
-  body {
-    @apply bg-dark text-foreground;
-    margin: 0;
-    padding: 0;
-  }
 
   /* Custom utility classes */
   .neon-shadow-blue {
