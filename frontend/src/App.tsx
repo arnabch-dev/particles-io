@@ -3,7 +3,7 @@ import Board from "./Board";
 import AuthProvider from "./components/AuthProvider";
 import SocketProvider from "./SocketProvider";
 import AuthProtect from "./components/AuthProctect";
-
+import LandingPage from "./pages/landing-page";
 function MultiplayerWrapper() {
   return (
       <AuthProtect>
@@ -20,8 +20,8 @@ function App() {
     <AuthProvider redirect_uri={URI}>
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingPage/>}/>
         <Route path="/multiplayer" element={<MultiplayerWrapper />} />
-        {/* other routes */}
       </Routes>
     </BrowserRouter>
     </AuthProvider>
