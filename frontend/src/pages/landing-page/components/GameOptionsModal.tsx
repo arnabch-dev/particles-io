@@ -1,8 +1,13 @@
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
-import NeonButton from './NeonButton';
-import { User } from 'lucide-react';
-import { toast } from '../../../components/ui/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
+import NeonButton from "./NeonButton";
+import { User } from "lucide-react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { Link } from "react-router";
 
 interface GameOptionsModalProps {
   isOpen: boolean;
@@ -13,19 +18,9 @@ interface GameOptionsModalProps {
 const GameOptionsModal = ({
   isOpen,
   onClose,
-  onSelectSinglePlayer
+  onSelectSinglePlayer,
 }: GameOptionsModalProps) => {
-  const handleMultiplayerClick = () => {
-    // For now, just show a toast notification about login requirement
-    toast({
-      title: "Login Required",
-      description: "You need to login to play multiplayer mode.",
-      variant: "destructive",
-    });
-    
-    // Close the modal after showing the toast
-    onClose();
-  };
+  const { isAuthenticated } = useAuth0();
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -35,25 +30,25 @@ const GameOptionsModal = ({
             Choose Game Mode
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-6 py-4">
           <div className="flex flex-col items-center gap-4">
-            <NeonButton 
-              color="blue" 
-              className="w-full text-lg" 
-              onClick={onSelectSinglePlayer}
-            >
-              Single Player
-            </NeonButton>
-            
-            <NeonButton 
-              color="purple" 
-              className="w-full text-lg" 
-              onClick={handleMultiplayerClick}
-            >
-              <User className="mr-2 h-5 w-5" />
-              Multiplayer (Login Required)
-            </NeonButton>
+            <Link to="/single">
+              <NeonButton
+                color="blue"
+                className="w-full text-lg"
+                onClick={onSelectSinglePlayer}
+              >
+                Single Player
+              </NeonButton>
+            </Link>
+
+            <Link to="/multiplayer">
+              <NeonButton color="purple" className="w-full text-lg">
+                <User className="mr-2 h-5 w-5" />
+                Multiplayer{isAuthenticated ? "" : "(Login Required)"}
+              </NeonButton>
+            </Link>
           </div>
         </div>
       </DialogContent>
