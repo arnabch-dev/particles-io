@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .socket.app import socket_app
 from contextlib import asynccontextmanager
 from .cache.cache import Cache
-from system.socket.app import start_game_ticker
+from system.socket import socket_app, game_namespace
+from system.routes.lobby import router as lobby_router
+import socketio
 import asyncio
 
 
@@ -13,14 +14,15 @@ async def startup_event(app: FastAPI):
     # setting up pub sub for disconnected users
     # delete users from the users
     # setting up db
-    asyncio.create_task(start_game_ticker(app))
+    game_namespace.set_app(app)
+    asyncio.create_task(game_namespace.start_game_ticker(app))
     yield
     await app.state.cache.close()
 
 
 def create_app():
     app = FastAPI(lifespan=startup_event)
-
+    app.include_router(lobby_router,prefix="/lobby")
     app.mount("/", app=socket_app)
     app.add_middleware(
         CORSMiddleware,

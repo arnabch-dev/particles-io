@@ -87,7 +87,6 @@ export default function SocketProvider({ children }: PropsWithChildren) {
   // Initialize socket connection after token is set
   useEffect(() => {
     if (!token || !user) return;
-
     const newSocket = io(import.meta.env.VITE_SOCKET_URL!, {
       path: "/socket/",
       withCredentials: true,

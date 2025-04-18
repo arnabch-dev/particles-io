@@ -3,7 +3,6 @@ from system.auth import VerifyToken
 from redis import Redis
 from system.cache.cache import get_cache_from_app
 
-
 def con_event(handler):
     """
     flow with the socket io event
@@ -12,7 +11,8 @@ def con_event(handler):
     """
 
     @wraps(handler)
-    async def wrapper(sid, environ, auth, *args, **kwargs):
+    async def wrapper(*args, **kwargs):
+        self,sid, environ, auth = args
         scope = environ.get("asgi.scope")
         app = scope.get("app")
         cache = get_cache_from_app(app)
@@ -27,17 +27,14 @@ def con_event(handler):
         user_auth_data = await authorisation.verify(token)
         user_id = user_auth_data.get("sub")
         return await handler(
-            sid,
-            environ=environ,
+            self,
+            sid=sid,
+            cache=cache,
             user_id=user_id,
             auth=auth,
-            cache=cache,
             headers=headers,
             scope=scope,
             app=app,
-            token=token,
-            *args,
-            **kwargs
         )
 
     return wrapper
