@@ -4,7 +4,9 @@ import jwt
 from jwt import PyJWKClient
 import os
 from dotenv import load_dotenv
+
 load_dotenv(".env")
+
 
 class UnauthorizedException(HTTPException):
     def __init__(self, detail: str, **kwargs):
@@ -17,10 +19,12 @@ class UnauthenticatedException(HTTPException):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Requires authentication"
         )
 
+
 auth0_domain = os.environ.get("AUTH0_DOMAIN")
 auth0_algorithms = os.environ.get("AUTH0_ALGORITHMS", "RS256").split(",")
 auth0_api_audience = os.environ.get("AUTH0_API_AUDIENCE")
 auth0_issuer = os.environ.get("AUTH0_ISSUER") or f"https://{auth0_domain}/"
+
 
 class VerifyToken:
     def __init__(self):

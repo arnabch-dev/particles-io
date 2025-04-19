@@ -17,14 +17,16 @@ DIMENSION_MIN = 10
 DIMENSION_MAX = 824
 DEFAULT_ROOM = "ROOM"
 
+
 class GameNamespace(AsyncNamespace):
     # generally app will be setup during startup event
-    def __init__(self, namespace="/game",app=None):
+    def __init__(self, namespace="/game", app=None):
         super().__init__(namespace)
         self.app = app
 
-    def set_app(self,app):
+    def set_app(self, app):
         self.app = app
+
     async def get_all_player_details(self, players_cache, room) -> list:
         players = []
         all_players_ids = await room.get_all_players()
@@ -65,23 +67,31 @@ class GameNamespace(AsyncNamespace):
             if player:
                 projectile.position["x"] += x
                 projectile.position["y"] += y + GRAVITY
-                if not (DIMENSION_MIN <= projectile.position["x"] <= DIMENSION_MAX) or not (
-                    DIMENSION_MIN <= projectile.position["y"] <= DIMENSION_MAX
-                ):
+                if not (
+                    DIMENSION_MIN <= projectile.position["x"] <= DIMENSION_MAX
+                ) or not (DIMENSION_MIN <= projectile.position["y"] <= DIMENSION_MAX):
                     projectiles[idx] = None
                     continue
                 for cur_player in players_map.values():
                     if projectile.user_id != cur_player.player_id:
-                        player_element = GameElement(**cur_player.position, radius=PLAYER_RADIUS)
-                        projectile_element = GameElement(**projectile.position, radius=PROJECTILE_RADIUS)
+                        player_element = GameElement(
+                            **cur_player.position, radius=PLAYER_RADIUS
+                        )
+                        projectile_element = GameElement(
+                            **projectile.position, radius=PROJECTILE_RADIUS
+                        )
                         if check_collision(player_element, projectile_element):
-                            await self.remove_player(players_cache, room, cur_player.player_id)
+                            await self.remove_player(
+                                players_cache, room, cur_player.player_id
+                            )
                             projectiles[idx] = None
                             HIT = True
                             break
                 if not HIT:
                     projectile_response.append(
-                        ProjectileResponse(**projectile.model_dump(), color=player.color).model_dump()
+                        ProjectileResponse(
+                            **projectile.model_dump(), color=player.color
+                        ).model_dump()
                     )
                     projectiles[idx] = projectile
             else:
@@ -100,10 +110,12 @@ class GameNamespace(AsyncNamespace):
             await asyncio.sleep(0.015)
 
     @con_event
-    async def on_connect(self, sid, cache: Cache, user_id: str,*args,**kwargs):
+    async def on_connect(self, sid, cache: Cache, user_id: str, *args, **kwargs):
         room = RoomCache(cache, DEFAULT_ROOM)
         players_cache = PlayersCache(cache)
-        player_exists = await room.has(user_id) and await players_cache.get_player(user_id)
+        player_exists = await room.has(user_id) and await players_cache.get_player(
+            user_id
+        )
         if not player_exists:
             player_details = dump_player_details(sid, user_id, DEFAULT_ROOM)
             await room.add_player(user_id)
@@ -150,7 +162,7 @@ class GameNamespace(AsyncNamespace):
         projectile_cache = ProjectileCache(cache, DEFAULT_ROOM)
         await projectile_cache.add_projectile(user_projectile)
 
-    async def on_disconnect(self, sid,*args,**kwargs):
+    async def on_disconnect(self, sid, *args, **kwargs):
         # scope = self.get_environ(sid).get("asgi.scope")
         # scope = self.server.environ.get(sid).get("asgi.scope")
         cache = get_cache_from_app(self.app)
