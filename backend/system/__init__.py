@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from .cache.cache import Cache
-from system.socket import socket_app, game_namespace
+from system.socket import socket_app, game_namespace,lobby_namespace
 from system.routes.lobby import router as lobby_router
 from .events import pub_sub
 import asyncio

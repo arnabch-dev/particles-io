@@ -1,7 +1,11 @@
+from system.sio import sio
 import socketio
 from .game import GameNamespace
+from .lobby import LobbyNamespace
 
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+
 game_namespace = GameNamespace("/game")
+lobby_namespace = LobbyNamespace("/lobby")
 sio.register_namespace(game_namespace)
+sio.register_namespace(lobby_namespace)
 socket_app = socketio.ASGIApp(sio, socketio_path="/socket/")

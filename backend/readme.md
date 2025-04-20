@@ -24,7 +24,7 @@ https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
 > May be we can use another field in the player details to make sure one player does not block the whole queue.
 ```python
 # lobby caches
-players_queue : queue of player_id
+players_queue : set of player_id  which will be popped by the consumer
 rooms:avaiable = redis_sorted_set(member-> roomId, score-> players) # heap
 room:room_id = metadata with ttl 10mins
 ```
