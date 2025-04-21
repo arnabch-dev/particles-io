@@ -11,10 +11,10 @@ class PlayersLobbyCache:
         async with self.cache as cache:
             await cache.sadd(self.name, player_id)
 
-    async def has(self,player_id) -> Player | None:
+    async def has(self, player_id) -> Player | None:
         async with self.cache as cache:
             return bool(await cache.sismember(self.name, player_id))
 
-    async def remove_player(self,player_id) -> Player | None:
+    async def remove_player(self, player_id) -> Player | None:
         async with self.cache as cache:
             return await cache.srem(self.name, player_id)

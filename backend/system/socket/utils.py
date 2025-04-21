@@ -12,8 +12,8 @@ def calculate_ping():
     return
 
 
-def dump_player_details(sid, id, room_id, username=""):
-    color = get_unique_color_by_sid(sid)
+def dump_player_details(sid, id, room_id, username="", prev_color=""):
+    color = prev_color if prev_color else get_unique_color_by_sid(sid)
     x = random.random() * 500
     y = random.random() * 500
     # TODO: calculate ping

@@ -28,12 +28,18 @@ async def add_to_lobby(request: Request, headers: Annotated[HeaderPayload, Heade
     existing_player = await player_cache.get_player(player_id)
     if existing_player:
         if existing_player.room_id:
-            return JSONResponse(status_code=400,content={"message":"player already in a match","room":existing_player.room_id})
-        player_details = dump_player_details(existing_player.sid,player_id,"")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "message": "player already in a match",
+                    "room": existing_player.room_id,
+                },
+            )
+        player_details = dump_player_details(existing_player.sid, player_id, "")
         await player_cache.set_player(player_details)
         return {"success": True}
-    
-    # already in lobby        
+
+    # already in lobby
     if await lobby.has(player_id):
         return {"success": True}
 

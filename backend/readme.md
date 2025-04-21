@@ -35,7 +35,9 @@ projectile:room_id : queue
 rooms:room_id:set() # players
 leaderboard: sorted_set # heap
 ```
-
+* One game at a time per client
+* Lobby and room under same namespace -> /lobby
+* Game under a separate namespace -> /game
 * Lobby = Room
 * Each lobby will be having max 5 members and min 3 members to start the game
 * Technically a queuing and assinging in some priority basis
@@ -48,3 +50,8 @@ leaderboard: sorted_set # heap
 * When a room:room_id timesout
     * Listen to it and check the number of players
     * Take the decision of what to do with the room
+
+* Maintaing race conditon for player joining flows
+    * Player switching from lobby to room to game. Solved it by playing lobby and room under same namespace
+    * Game joining when a player leaves a match in between. So at the start player makes a http call for lobby queueing. If he is a part of a prev match then no continuing.
+    Plus the server takes care of room joining
