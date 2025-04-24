@@ -55,3 +55,10 @@ leaderboard: sorted_set # heap
     * Player switching from lobby to room to game. Solved it by playing lobby and room under same namespace
     * Game joining when a player leaves a match in between. So at the start player makes a http call for lobby queueing. If he is a part of a prev match then no continuing.
     Plus the server takes care of room joining
+
+
+### Deployment plan
+* Deploy with docker. Nginx on top of the server -> 
+    * /app will go to the frontend hosted on the netlify
+    * /feedback should go to the feedback page
+    * / should go to the backend (ws support needed here)
