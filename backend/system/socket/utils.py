@@ -1,5 +1,5 @@
 import hashlib, random, math, uuid
-from ..models import Player, GameElement
+from ..models import Player, GameElement, PlayerResponse
 
 
 def get_unique_color_by_sid(sid):
@@ -42,3 +42,15 @@ def get_random_id():
 def check_collision(obj1: GameElement, obj2: GameElement):
     dist = math.hypot(obj1.x - obj2.x, obj1.y - obj2.y)
     return dist - obj1.radius - obj2.radius < 1
+
+
+
+async def get_all_player_details(players_cache, room) -> list:
+    players = []
+    all_players_ids = await room.get_all_players()
+    for pid in all_players_ids:
+        player = await players_cache.get_player(pid)
+        if player:
+            player = player.model_dump()
+            players.append(PlayerResponse(**player).model_dump())
+    return players

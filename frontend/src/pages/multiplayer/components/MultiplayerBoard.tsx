@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { GameEngine } from "../../../core/gameEngine";
 import gsap from "gsap";
-import { useSocket } from "../../../context/SocketProvider";
+import { useGameSocket } from "../../../context/GameSocketProvider";
 import { Circle } from "../../../core/core";
 import { useFocus } from "../../../hooks/Focus";
 import { getAngle } from "../../../utils";
@@ -18,7 +18,7 @@ export default function MultiplayerBoard() {
     emitMovement,
     emitShoot,
     resetProjetiles,
-  } = useSocket();
+  } = useGameSocket();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [gameEngine, setGameEngine] = useState<GameEngine | null>(null);
 

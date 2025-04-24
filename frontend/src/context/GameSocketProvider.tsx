@@ -47,14 +47,15 @@ interface Game {
 
 const SocketContext = createContext<Game | null>(null);
 
-export const useSocket = () => {
+export const useGameSocket = () => {
   const context = useContext(SocketContext);
   if (!context)
-    throw new Error("useSocket must be used within a SocketProvider");
+    throw new Error("useGameSocket must be used within a GameSocketProvider");
   return context;
 };
 
-export default function SocketProvider({ children }: PropsWithChildren) {
+// TODO: handle rooms here
+export default function GameSocketProvider({ children }: PropsWithChildren) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [playerData, setPlayerData] = useState<Player[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
@@ -87,7 +88,7 @@ export default function SocketProvider({ children }: PropsWithChildren) {
   // Initialize socket connection after token is set
   useEffect(() => {
     if (!token || !user) return;
-    const newSocket = io(import.meta.env.VITE_SOCKET_URL!, {
+    const newSocket = io(`${import.meta.env.VITE_SOCKET_URL!}/game`, {
       path: "/socket/",
       withCredentials: true,
       transports: ["websocket"],

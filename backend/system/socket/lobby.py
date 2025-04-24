@@ -20,6 +20,6 @@ class LobbyNamespace(AsyncNamespace):
         lobby_cache = PlayersLobbyCache(cache)
         player_in_lobby = await lobby_cache.has(user_id)
         if player_in_lobby:
-            raise Exception("Connection error")
+            return
         player_details = dump_player_details(sid, user_id, "")
         await pub_sub.publish(PLAYERS_JOINED, player_details.model_dump_json())

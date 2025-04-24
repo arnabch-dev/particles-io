@@ -31,3 +31,7 @@ class RoomCache:
             for pid in player_ids:
                 if not await cache.exists(f"pid:{pid}"):
                     await cache.srem(self.room_id, pid)
+    
+    async def is_valid(self):
+        async with self.cache as cache:
+            return cache.exists(self.room_id)

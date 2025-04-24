@@ -14,6 +14,7 @@ from system.socket.utils import dump_player_details
 
 @pub_sub.pattern_subscribe(PLAYERS_JOINED)
 async def add_player_to_room(data: dict, cache: Cache):
+    print("consuming")
     lobby_cache = PlayersLobbyCache(cache)
     players_cache = PlayersCache(cache)
     # TODO: need to have transaction and atomicity here
@@ -40,11 +41,24 @@ async def add_player_to_room(data: dict, cache: Cache):
             prev_color=data.get("color"),
         )
     )
-    # server driven rooms
-    await sio.enter_room(data.get("sid"), room=room_id, namespace="/lobby"),
+    max_retries = 3
+    retry_delay = 0.2  # 200ms
+    for attempt in range(1, max_retries + 1):
+        try:
+            await sio.enter_room(data.get("sid"), room=room_id, namespace="/lobby")
+            break  # success, exit loop
+        except ValueError as e:
+            if attempt == max_retries:
+                print(f"[ERROR] Could not move SID {data.get('sid')} to room {room_id}: {e}")
+                return  # exit early if failed after retries
+            else:
+                print(f"[WARN] SID {data.get('sid')} not connected yet. Retry {attempt}/{max_retries}")
+                await asyncio.sleep(retry_delay)
+
     await sio.emit(
         "game:room-added", {"room_id": room_id}, to=data.get("sid"), namespace="/lobby"
     )
+
     if score == -1:
         # await pub_sub.publish(ROOM_READY,json.dumps({"room_id":room_id}))
         # not doing publish rather sending all players ready as the player size are limited

@@ -1,8 +1,8 @@
 import asyncio
 from socketio import AsyncNamespace
-from .utils import dump_player_details, get_velocity, get_random_id, check_collision
+from .utils import dump_player_details, get_velocity, get_random_id, check_collision, get_all_player_details
 from .decorators import con_event
-from system.models import PlayerResponse, Projectile, ProjectileResponse, GameElement
+from system.models import Projectile, ProjectileResponse, GameElement
 from system.cache.room import RoomCache
 from system.cache.players import PlayersCache
 from system.cache.projectile import ProjectileCache
@@ -17,7 +17,7 @@ DIMENSION_MIN = 10
 DIMENSION_MAX = 824
 DEFAULT_ROOM = "ROOM"
 
-
+# TODO: handle rooms heres
 class GameNamespace(AsyncNamespace):
     # generally app will be setup during startup event
     def __init__(self, namespace="/game", app=None):
@@ -27,16 +27,6 @@ class GameNamespace(AsyncNamespace):
     def set_app(self, app):
         self.app = app
 
-    async def get_all_player_details(self, players_cache, room) -> list:
-        players = []
-        all_players_ids = await room.get_all_players()
-        for pid in all_players_ids:
-            player = await players_cache.get_player(pid)
-            if player:
-                player = player.model_dump()
-                players.append(PlayerResponse(**player).model_dump())
-        return players
-
     async def remove_player(self, players_cache, room, user_id):
         await players_cache.delete_player(user_id)
         await room.remove_player(user_id)
@@ -45,7 +35,7 @@ class GameNamespace(AsyncNamespace):
         cache = get_cache_from_app(app)
         players_cache = PlayersCache(cache)
         room = RoomCache(cache, DEFAULT_ROOM)
-        players = await self.get_all_player_details(players_cache, room)
+        players = await get_all_player_details(players_cache, room)
         await self.emit("update-players", players)
 
     async def sync_projectile_and_collision(self, app):
@@ -121,7 +111,7 @@ class GameNamespace(AsyncNamespace):
             await room.add_player(user_id)
             await players_cache.set_player(player_details)
 
-        player_data = await self.get_all_player_details(players_cache, room)
+        player_data = await get_all_player_details(players_cache, room)
         await self.save_session(sid, {"user_id": user_id})
         await self.emit("joined", player_data)
 
@@ -171,5 +161,5 @@ class GameNamespace(AsyncNamespace):
         players_cache = PlayersCache(cache)
         room = RoomCache(cache, DEFAULT_ROOM)
         await self.remove_player(players_cache, room, user_id)
-        players = await self.get_all_player_details(players_cache, room)
+        players = await get_all_player_details(players_cache, room)
         await self.emit("joined", players)

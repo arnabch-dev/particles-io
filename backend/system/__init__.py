@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from .cache.cache import Cache
 from system.socket import socket_app, game_namespace, lobby_namespace
-from system.routes.lobby import router as lobby_router
+from system.routes.router import router as lobby_router
 from .events import pub_sub
 import asyncio
-
+origins = [
+    "http://localhost:5173",
+]
 
 @asynccontextmanager
 async def startup_event(app: FastAPI):
@@ -25,13 +27,15 @@ async def startup_event(app: FastAPI):
 
 def create_app():
     app = FastAPI(lifespan=startup_event)
+    app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
     app.include_router(lobby_router, prefix="/lobby")
     app.mount("/", app=socket_app)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],  # Should be a list, not a string
-        allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
-        allow_headers=["*"],  # Allows all headers
-    )
 
     return app
