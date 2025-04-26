@@ -12,6 +12,7 @@ class PubSub:
         self._pubsub = None
 
     def set_pubsub(self, cache: Cache):
+        self._cache = cache
         self._client = cache.client
         self._pubsub = self._client.pubsub()
 
@@ -62,11 +63,15 @@ class PubSub:
 
                 if handler:
                     if inspect.iscoroutinefunction(handler):
-                        await handler(data, cache=self._client)
+                        await handler(data, cache=self._client, cache_helper=self._cache)
                     else:
-                        handler(data, cache=self._client)
+                        handler(data, cache=self._client, cache_helper=self._cache)
         except ConnectionError as e:
             print("pubsub closed")
+        
+        # if consumer dies due to the mishandling of the code
+        except Exception as e:
+            print(f"[ERROR] Pubsub listener error: {e}")
 
     async def close(self):
         await self._pubsub.close()
