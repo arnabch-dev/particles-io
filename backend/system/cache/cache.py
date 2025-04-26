@@ -1,6 +1,7 @@
 import redis.asyncio as redis
 from fastapi import Request, FastAPI
-import json
+import json, uuid
+from contextlib import asynccontextmanager
 
 
 class Cache:
@@ -9,6 +10,34 @@ class Cache:
         self.client: redis.Redis = redis.Redis(
             connection_pool=self.pool, decode_responses=True
         )  # Decode to string
+
+    @asynccontextmanager
+    async def transaction_per_key(self, lock_key=None, lock_timeout=5000):
+        identifier = None
+        print(lock_key)
+        # acquire the lock
+        if lock_key:
+            identifier = str(uuid.uuid4())
+            result = await self.client.set(lock_key, identifier, nx=True, px=lock_timeout)
+            if not result:
+                raise Exception(f"Could not acquire lock for key {lock_key}")
+
+        try:
+            yield self.client
+        except Exception as e:
+            raise e
+        finally:
+            # release lock
+            # lua script to do it without sequencing
+            if lock_key and identifier:
+                lua_script = """
+                if redis.call("GET", KEYS[1]) == ARGV[1] then
+                    return redis.call("DEL", KEYS[1])
+                else
+                    return 0
+                end
+                """
+                await self.client.eval(lua_script, 1, lock_key, identifier)
 
     async def __aenter__(self, *args, **kwargs):
         return self.client

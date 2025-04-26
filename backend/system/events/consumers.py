@@ -1,5 +1,5 @@
 from . import pub_sub
-import asyncio
+from redis import Redis
 from system.cache.cache import Cache
 from system.cache.players_lobby import PlayersLobbyCache
 from system.cache.players import PlayersCache
@@ -13,13 +13,13 @@ from system.socket.utils import dump_player_details
 
 
 @pub_sub.pattern_subscribe(PLAYERS_JOINED)
-async def add_player_to_room(data: dict, cache: Cache):
-    print("consuming")
+async def add_player_to_room(data: dict, cache: Redis, cache_helper:Cache):
+    print('event published')
     lobby_cache = PlayersLobbyCache(cache)
     players_cache = PlayersCache(cache)
-    # TODO: need to have transaction and atomicity here
     player = await players_cache.get_player(data.get("player_id"))
     if player and player.room_id:
+        print("player having room ",player)
         return
     avaialbe_rooms = AvailableRoomsCache(cache)
     room = await avaialbe_rooms.get_room_with_most_player()
@@ -28,42 +28,23 @@ async def add_player_to_room(data: dict, cache: Cache):
         room_id, _ = room
     else:
         room_id = get_random_object_id()
-    score = await avaialbe_rooms.increment_room_score_till_threshold(room_id)
-    room_cache = RoomCache(cache, room_id)
-    # doing it sequentially as they are all dependent events changing the state
-    await lobby_cache.remove_player(data.get("player_id"))
-    await room_cache.add_player(data.get("player_id"))
-    await players_cache.set_player(
-        dump_player_details(
-            data.get("sid"),
-            data.get("player_id"),
-            room_id,
-            prev_color=data.get("color"),
+    async with cache_helper.transaction_per_key(room_id) as _:
+        score = await avaialbe_rooms.increment_room_score_till_threshold(room_id)
+        room_cache = RoomCache(cache, room_id)
+        await lobby_cache.remove_player(data.get("player_id"))
+        await room_cache.add_player(data.get("player_id"))
+        await players_cache.set_player(
+            dump_player_details(
+                data.get("sid"),
+                data.get("player_id"),
+                room_id,
+                prev_color=data.get("color"),
+            ),
         )
-    )
-    max_retries = 3
-    retry_delay = 0.2  # 200ms
-    for attempt in range(1, max_retries + 1):
-        try:
-            await sio.enter_room(data.get("sid"), room=room_id, namespace="/lobby")
-            break  # success, exit loop
-        except ValueError as e:
-            if attempt == max_retries:
-                print(f"[ERROR] Could not move SID {data.get('sid')} to room {room_id}: {e}")
-                return  # exit early if failed after retries
-            else:
-                print(f"[WARN] SID {data.get('sid')} not connected yet. Retry {attempt}/{max_retries}")
-                await asyncio.sleep(retry_delay)
+        await sio.enter_room(data.get("sid"), room=room_id, namespace="/lobby")
+        await sio.emit(
+            "game:room-added", {"room_id": room_id}, to=data.get("sid"), namespace="/lobby"
+        )
 
-    await sio.emit(
-        "game:room-added", {"room_id": room_id}, to=data.get("sid"), namespace="/lobby"
-    )
-
-    if score == -1:
-        # await pub_sub.publish(ROOM_READY,json.dumps({"room_id":room_id}))
-        # not doing publish rather sending all players ready as the player size are limited
-        # we may want to set the state of the player in the cache if required
-        # otherwise automatically the state will be refreshed once he joins the game namespace
-        # TODO: updating state mechanism for metadata of room like started, playing,leaderboard settlement
-        # if player not in lobby that means player is either in the game or disconnected.
-        await sio.emit("game:start", room=room_id, namespace="/lobby")
+        if score == -1:
+            await sio.emit("game:start", room=room_id, namespace="/lobby")
