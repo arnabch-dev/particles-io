@@ -19,7 +19,7 @@ class LobbyNamespace(AsyncNamespace):
     async def on_connect(self, sid, cache: Cache, user_id: str, *args, **kwargs):
         lobby_cache = PlayersLobbyCache(cache)
         player_in_lobby = await lobby_cache.has(user_id)
-        if player_in_lobby:
+        if not player_in_lobby:
             return
         player_details = dump_player_details(sid, user_id, "")
         await pub_sub.publish(PLAYERS_JOINED, player_details.model_dump_json())

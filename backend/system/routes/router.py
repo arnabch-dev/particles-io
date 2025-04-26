@@ -7,7 +7,6 @@ from system.cache.players_lobby import PlayersLobbyCache
 from system.cache.room import RoomCache
 from system.cache.players import PlayersCache
 from system.socket.utils import dump_player_details, get_all_player_details
-from system.events.publishers import publish_player_joined
 from system.auth import VerifyToken
 from pydantic import BaseModel
 
@@ -50,7 +49,9 @@ async def add_to_lobby(request: Request, headers: Annotated[HeaderPayload, Heade
     await asyncio.gather(
         lobby.add_player(player_id), player_cache.set_player(player_details)
     )
-    await publish_player_joined(player_details)
+    # HACK: dont publish the event here as player may not be joined to the websocket yet => race condition
+    # better to do in the on_connect of the namespace
+    # await publish_player_joined(player_details)
     return {"success": True}
 
 @router.get("/{room_id}")
