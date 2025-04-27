@@ -1,6 +1,12 @@
 import asyncio
 from socketio import AsyncNamespace
-from .utils import dump_player_details, get_velocity, get_random_id, check_collision, get_all_player_details
+from .utils import (
+    dump_player_details,
+    get_velocity,
+    get_random_id,
+    check_collision,
+    get_all_player_details,
+)
 from system.sio import sio
 from .decorators import con_event
 from system.models import Projectile, ProjectileResponse, GameElement
@@ -16,6 +22,7 @@ PLAYER_RADIUS = 10
 PROJECTILE_RADIUS = 5
 DIMENSION_MIN = 10
 DIMENSION_MAX = 824
+
 
 async def get_rooms():
     pass
@@ -38,14 +45,14 @@ class GameNamespace(AsyncNamespace):
         await players_cache.delete_player(user_id)
         await room.remove_player(user_id)
 
-    async def sync_player_movement(self, app,room_id):
+    async def sync_player_movement(self, app, room_id):
         cache = get_cache_from_app(app)
         players_cache = PlayersCache(cache)
         room = RoomCache(cache, room_id)
         players = await get_all_player_details(players_cache, room)
-        await self.emit("update-players", players,to=room_id)
+        await self.emit("update-players", players, to=room_id)
 
-    async def sync_projectile_and_collision(self, app,room_id):
+    async def sync_projectile_and_collision(self, app, room_id):
         cache = get_cache_from_app(app)
         players_cache = PlayersCache(cache)
         projectile_cache = ProjectileCache(cache, room_id)
@@ -98,30 +105,28 @@ class GameNamespace(AsyncNamespace):
             if projectile:
                 await projectile_cache.push_to_front(projectile)
 
-        await self.emit("update-projectiles", projectile_response,to=room_id)
+        await self.emit("update-projectiles", projectile_response, to=room_id)
 
     async def start_game_ticker(self, app):
         cache = get_cache_from_app(app)
         while True:
             rooms = await RoomCache.get_all_rooms(cache)
             for room_id in rooms:
-                await self.sync_player_movement(app,room_id)
-                await self.sync_projectile_and_collision(app,room_id)
+                await self.sync_player_movement(app, room_id)
+                await self.sync_projectile_and_collision(app, room_id)
             await asyncio.sleep(0.015)
 
     @con_event
     async def on_connect(self, sid, cache: Cache, user_id: str, *args, **kwargs):
         players_cache = PlayersCache(cache)
-        player_exists = await players_cache.get_player(
-            user_id
-        )
+        player_exists = await players_cache.get_player(user_id)
         if not player_exists:
             raise Exception("Player not existing")
         room_id = player_exists.room_id
         room = RoomCache(cache, room_id)
-        await self.enter_room(sid,room=room_id,namespace=self.namespace)
+        await self.enter_room(sid, room=room_id, namespace=self.namespace)
         player_data = await get_all_player_details(players_cache, room)
-        await self.save_session(sid, {"user_id": user_id,"room_id":room_id})
+        await self.save_session(sid, {"user_id": user_id, "room_id": room_id})
         await self.emit("joined", player_data)
 
     async def on_move(self, sid, direction: str):

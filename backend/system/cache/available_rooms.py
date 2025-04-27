@@ -12,7 +12,7 @@ class AvailableRoomsCache:
 
     async def is_room_exists(self, room_id) -> bool:
         async with self.cache as cache:
-            bool(await cache.zscore(self.name, room_id))
+            return bool(await cache.zscore(self.name, room_id))
 
     async def add_room(self, room_id) -> int:
         async with self.cache as cache:

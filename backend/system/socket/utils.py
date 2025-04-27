@@ -44,7 +44,6 @@ def check_collision(obj1: GameElement, obj2: GameElement):
     return dist - obj1.radius - obj2.radius < 1
 
 
-
 async def get_all_player_details(players_cache, room) -> list:
     players = []
     all_players_ids = await room.get_all_players()

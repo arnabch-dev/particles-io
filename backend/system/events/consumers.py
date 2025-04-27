@@ -14,14 +14,15 @@ from system.socket.utils import dump_player_details
 # TODO: write a consumer starter script to publish an event to the consumer for the lobby handling in case of failures if happend
 # TODO: write a consumer starter script to get the room with scores
 
+
 @pub_sub.pattern_subscribe(PLAYERS_JOINED)
-async def add_player_to_room(data: dict, cache: Redis, cache_helper:Cache):
-    print('event published')
+async def add_player_to_room(data: dict, cache: Redis, cache_helper: Cache):
+    print("event published")
     lobby_cache = PlayersLobbyCache(cache)
     players_cache = PlayersCache(cache)
     player = await players_cache.get_player(data.get("player_id"))
     if player and player.room_id:
-        print("player having room ",player)
+        print("player having room ", player)
         return
     avaialbe_rooms = AvailableRoomsCache(cache)
     room = await avaialbe_rooms.get_room_with_most_player()
@@ -46,9 +47,14 @@ async def add_player_to_room(data: dict, cache: Redis, cache_helper:Cache):
         # for the lobby namespace so that all the players can get the event of game start
         await sio.enter_room(data.get("sid"), room=room_id, namespace="/lobby")
         await sio.emit(
-            "game:room-added", {"room_id": room_id}, to=data.get("sid"), namespace="/lobby"
+            "game:room-added",
+            {"room_id": room_id},
+            to=data.get("sid"),
+            namespace="/lobby",
         )
 
         if score == -1:
-            await RoomCache.add_room(cache,room_id)
-            await sio.emit("game:start", {"room_id":room_id},room=room_id, namespace="/lobby")
+            await RoomCache.add_room(cache, room_id)
+            await sio.emit(
+                "game:start", {"room_id": room_id}, room=room_id, namespace="/lobby"
+            )

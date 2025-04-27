@@ -18,7 +18,9 @@ class Cache:
         # acquire the lock
         if lock_key:
             identifier = str(uuid.uuid4())
-            result = await self.client.set(lock_key, identifier, nx=True, px=lock_timeout)
+            result = await self.client.set(
+                lock_key, identifier, nx=True, px=lock_timeout
+            )
             if not result:
                 raise Exception(f"Could not acquire lock for key {lock_key}")
 

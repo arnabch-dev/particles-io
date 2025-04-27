@@ -63,12 +63,14 @@ class PubSub:
 
                 if handler:
                     if inspect.iscoroutinefunction(handler):
-                        await handler(data, cache=self._client, cache_helper=self._cache)
+                        await handler(
+                            data, cache=self._client, cache_helper=self._cache
+                        )
                     else:
                         handler(data, cache=self._client, cache_helper=self._cache)
         except ConnectionError as e:
             print("pubsub closed")
-        
+
         # if consumer dies due to the mishandling of the code
         except Exception as e:
             print(f"[ERROR] Pubsub listener error: {e}")

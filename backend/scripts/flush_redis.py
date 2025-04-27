@@ -1,6 +1,7 @@
 import redis
 
-def flush_redis_store(host='localhost', port=6379, db=0, password=None):
+
+def flush_redis_store(host="localhost", port=6379, db=0, password=None):
     try:
         # Connect to Redis
         r = redis.Redis(host=host, port=port, db=db, password=password)
@@ -17,6 +18,7 @@ def flush_redis_store(host='localhost', port=6379, db=0, password=None):
         print(f"Failed to connect to Redis: {e}")
     except Exception as e:
         print(f"An error occurred: {e}")
+
 
 if __name__ == "__main__":
     # Adjust host, port, db, and password if needed

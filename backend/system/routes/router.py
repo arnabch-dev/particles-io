@@ -16,7 +16,9 @@ router = APIRouter()
 class HeaderPayload(BaseModel):
     token: str
 
+
 # TODO: maybe assigning something of a token to identify they are already verified so that no auth checks everytime
+
 
 @router.post("/")
 async def add_to_lobby(request: Request, headers: Annotated[HeaderPayload, Header()]):
@@ -54,16 +56,19 @@ async def add_to_lobby(request: Request, headers: Annotated[HeaderPayload, Heade
     # await publish_player_joined(player_details)
     return {"success": True}
 
+
 @router.get("/{room_id}")
-async def get_players_of_room(request:Request,room_id:str,headers: Annotated[HeaderPayload, Header()]):
+async def get_players_of_room(
+    request: Request, room_id: str, headers: Annotated[HeaderPayload, Header()]
+):
     cache = get_cache_from_request(request)
     player_cache = PlayersCache(cache)
     verifier = VerifyToken()
     player_info = await verifier.verify(token=headers.token)
     player_id = player_info.get("sub")
-    room = RoomCache(cache,room_id)
+    room = RoomCache(cache, room_id)
     if not await room.is_valid() and not room.has(player_id):
-        raise HTTPException(400,'not a valid player')
+        raise HTTPException(400, "not a valid player")
 
-    players = await get_all_player_details(player_cache,room)
+    players = await get_all_player_details(player_cache, room)
     return JSONResponse(players)
