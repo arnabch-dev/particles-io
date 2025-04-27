@@ -5,6 +5,7 @@ import MultiplayerPage from "./pages/multiplayer";
 import LobbyConnectingPage from "./pages/lobby";
 import LobbyRoomPage from "./pages/game-room";
 import LobbyContextProvider from "./context/LobbyContextProvider";
+import GameSocketProvider from "./context/GameSocketProvider";
 
 function App() {
   const URI = `${window.location.origin}/multiplayer`;
@@ -13,7 +14,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-
+          
+          {/* Routing based on namespace for having a discrete namespace websocket connection to the server */}
           {/* Lobby Routes */}
           <Route path="multiplayer" element={<LobbyContextProvider />}>
             <Route index element={<LobbyConnectingPage />} />
@@ -21,10 +23,9 @@ function App() {
           </Route>
 
           {/*Actual Game Routes */}
-          <Route
-            path="multiplayer/game/:room"
-            element={<MultiplayerPage />}
-          />
+          <Route path="multiplayer/game" element={<GameSocketProvider/>}>
+            <Route path=":room" element={<MultiplayerPage />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>

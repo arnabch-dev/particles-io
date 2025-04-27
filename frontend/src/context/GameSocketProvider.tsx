@@ -9,6 +9,8 @@ import { io, Socket } from "socket.io-client";
 import { type Coordinate } from "../core/core";
 import { useAuth0 } from "@auth0/auth0-react";
 import Loader from "../components/Loader";
+import AuthProtect from "../components/AuthProctect";
+import { Outlet } from "react-router";
 
 interface Player {
   color: string;
@@ -89,7 +91,7 @@ export default function GameSocketProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!token || !user) return;
     const newSocket = io(`${import.meta.env.VITE_SOCKET_URL!}/game`, {
-      path: "/socket/",
+      path: "/socket",
       withCredentials: true,
       transports: ["websocket"],
       auth: { token },
@@ -153,8 +155,10 @@ export default function GameSocketProvider({ children }: PropsWithChildren) {
   };
 
   return (
-    <SocketContext.Provider value={game}>
-      {socket?.connected ? children : <Loader text="Connecting to lobby...." />}
-    </SocketContext.Provider>
+    <AuthProtect>
+      <SocketContext.Provider value={game}>
+        {socket?.connected ? <Outlet/> : <Loader text="Connecting to lobby...." />}
+      </SocketContext.Provider>
+    </AuthProtect>
   );
 }

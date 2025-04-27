@@ -63,7 +63,7 @@ export default function LobbyContextProvider({ children }: PropsWithChildren) {
 
         // ✅ If allowed — connect to /lobby socket
         const newSocket = io(`${import.meta.env.VITE_SOCKET_URL}/lobby`, {
-          path: "/socket/",
+          path: "/socket",
           withCredentials: true,
           transports: ["websocket"],
           auth: { token },
