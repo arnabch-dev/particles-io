@@ -1,6 +1,7 @@
 import asyncio
 from socketio import AsyncNamespace
 from .utils import dump_player_details, get_velocity, get_random_id, check_collision, get_all_player_details
+from system.sio import sio
 from .decorators import con_event
 from system.models import Projectile, ProjectileResponse, GameElement
 from system.cache.room import RoomCache
@@ -15,9 +16,15 @@ PLAYER_RADIUS = 10
 PROJECTILE_RADIUS = 5
 DIMENSION_MIN = 10
 DIMENSION_MAX = 824
-DEFAULT_ROOM = "ROOM"
 
-# TODO: handle rooms heres
+async def get_rooms():
+    pass
+
+
+# HACK: I am using in memory sessions for storing the user_id and the room token for sids
+# on connect is validating all the stuffs from the redis cache and putting them from the redis cache to session
+# if server dies -> the client need to reconnect again so again it will get verified
+# we can check them from redis cache everytime but its kinda feel weird as it will make a network call
 class GameNamespace(AsyncNamespace):
     # generally app will be setup during startup event
     def __init__(self, namespace="/game", app=None):
@@ -31,19 +38,19 @@ class GameNamespace(AsyncNamespace):
         await players_cache.delete_player(user_id)
         await room.remove_player(user_id)
 
-    async def sync_player_movement(self, app):
+    async def sync_player_movement(self, app,room_id):
         cache = get_cache_from_app(app)
         players_cache = PlayersCache(cache)
-        room = RoomCache(cache, DEFAULT_ROOM)
+        room = RoomCache(cache, room_id)
         players = await get_all_player_details(players_cache, room)
-        await self.emit("update-players", players)
+        await self.emit("update-players", players,to=room_id)
 
-    async def sync_projectile_and_collision(self, app):
+    async def sync_projectile_and_collision(self, app,room_id):
         cache = get_cache_from_app(app)
         players_cache = PlayersCache(cache)
-        projectile_cache = ProjectileCache(cache, DEFAULT_ROOM)
+        projectile_cache = ProjectileCache(cache, room_id)
         projectiles = await projectile_cache.remove_projectiles()
-        room = RoomCache(cache, DEFAULT_ROOM)
+        room = RoomCache(cache, room_id)
 
         player_ids = await room.get_all_players()
         players_map = await players_cache.get_players_batch(list(player_ids))
@@ -91,28 +98,30 @@ class GameNamespace(AsyncNamespace):
             if projectile:
                 await projectile_cache.push_to_front(projectile)
 
-        await self.emit("update-projectiles", projectile_response)
+        await self.emit("update-projectiles", projectile_response,to=room_id)
 
     async def start_game_ticker(self, app):
+        cache = get_cache_from_app(app)
         while True:
-            await self.sync_player_movement(app)
-            await self.sync_projectile_and_collision(app)
+            rooms = await RoomCache.get_all_rooms(cache)
+            for room_id in rooms:
+                await self.sync_player_movement(app,room_id)
+                await self.sync_projectile_and_collision(app,room_id)
             await asyncio.sleep(0.015)
 
     @con_event
     async def on_connect(self, sid, cache: Cache, user_id: str, *args, **kwargs):
-        room = RoomCache(cache, DEFAULT_ROOM)
         players_cache = PlayersCache(cache)
-        player_exists = await room.has(user_id) and await players_cache.get_player(
+        player_exists = await players_cache.get_player(
             user_id
         )
         if not player_exists:
-            player_details = dump_player_details(sid, user_id, DEFAULT_ROOM)
-            await room.add_player(user_id)
-            await players_cache.set_player(player_details)
-
+            raise Exception("Player not existing")
+        room_id = player_exists.room_id
+        room = RoomCache(cache, room_id)
+        await self.enter_room(sid,room=room_id,namespace=self.namespace)
         player_data = await get_all_player_details(players_cache, room)
-        await self.save_session(sid, {"user_id": user_id})
+        await self.save_session(sid, {"user_id": user_id,"room_id":room_id})
         await self.emit("joined", player_data)
 
     async def on_move(self, sid, direction: str):
@@ -145,21 +154,23 @@ class GameNamespace(AsyncNamespace):
         app = self.server.environ.get("app")
         session = await self.get_session(sid)
         user_id = session.get("user_id")
+        room_id = session.get("room_id")
         cache = get_cache_from_app(self.app)
         user_projectile = Projectile(
             **projectile, user_id=user_id, projectile_id=get_random_id()
         )
-        projectile_cache = ProjectileCache(cache, DEFAULT_ROOM)
+        projectile_cache = ProjectileCache(cache, room_id)
         await projectile_cache.add_projectile(user_projectile)
 
     async def on_disconnect(self, sid, *args, **kwargs):
         # scope = self.get_environ(sid).get("asgi.scope")
         # scope = self.server.environ.get(sid).get("asgi.scope")
-        cache = get_cache_from_app(self.app)
-        session = await self.get_session(sid)
-        user_id = session.get("user_id")
-        players_cache = PlayersCache(cache)
-        room = RoomCache(cache, DEFAULT_ROOM)
-        await self.remove_player(players_cache, room, user_id)
-        players = await get_all_player_details(players_cache, room)
-        await self.emit("joined", players)
+        # cache = get_cache_from_app(self.app)
+        # session = await self.get_session(sid)
+        # user_id = session.get("user_id")
+        # players_cache = PlayersCache(cache)
+        # room = RoomCache(cache, DEFAULT_ROOM)
+        # await self.remove_player(players_cache, room, user_id)
+        # players = await get_all_player_details(players_cache, room)
+        # await self.emit("joined", players)
+        return

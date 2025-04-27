@@ -5,6 +5,24 @@ class RoomCache:
     def __init__(self, cache: Cache, room_id: str):
         self.cache = cache
         self.room_id = f"room:{room_id}"
+    
+    @classmethod
+    async def add_room(cls,cache:Cache,room_id:str):
+        async with cache as cache_instance:
+            await cache_instance.sadd("rooms",room_id)
+    
+    @classmethod
+    async def get_all_rooms(cls,cache:Cache):
+        async with cache as cache_instance:
+            room_ids = await cache_instance.smembers("rooms")
+            return list(map(lambda pid: pid.decode("utf-8"), room_ids))
+    
+    @classmethod
+    async def remove_room(cls,cache:Cache,room_id:str):
+        async with cache as cache_instance:
+            await cache_instance.srem("rooms",room_id)
+    
+    
 
     async def add_player(self, player_id: str):
         async with self.cache as cache:

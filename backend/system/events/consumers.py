@@ -11,6 +11,8 @@ from system.utils import get_random_object_id
 from system.sio import sio
 from system.socket.utils import dump_player_details
 
+# TODO: write a consumer starter script to publish an event to the consumer for the lobby handling in case of failures if happend
+# TODO: write a consumer starter script to get the room with scores
 
 @pub_sub.pattern_subscribe(PLAYERS_JOINED)
 async def add_player_to_room(data: dict, cache: Redis, cache_helper:Cache):
@@ -41,10 +43,12 @@ async def add_player_to_room(data: dict, cache: Redis, cache_helper:Cache):
                 prev_color=data.get("color"),
             ),
         )
+        # for the lobby namespace so that all the players can get the event of game start
         await sio.enter_room(data.get("sid"), room=room_id, namespace="/lobby")
         await sio.emit(
             "game:room-added", {"room_id": room_id}, to=data.get("sid"), namespace="/lobby"
         )
 
         if score == -1:
-            await sio.emit("game:start", room=room_id, namespace="/lobby")
+            await RoomCache.add_room(cache,room_id)
+            await sio.emit("game:start", {"room_id":room_id},room=room_id, namespace="/lobby")
