@@ -2,7 +2,7 @@ import asyncio
 import inspect
 from redis.exceptions import ConnectionError
 from system.cache.cache import Cache, serialise_cache_get_data
-
+from system.db import DBSessionManager
 
 # A non blocking pubsub
 class PubSub:
@@ -10,11 +10,13 @@ class PubSub:
         self._handlers = {}
         self._client = None
         self._pubsub = None
+        self._db_session = None
 
-    def set_pubsub(self, cache: Cache):
+    def set_pubsub(self, cache: Cache,db_session:DBSessionManager):
         self._cache = cache
         self._client = cache.client
         self._pubsub = self._client.pubsub()
+        self._db_session = db_session
 
     def subscribe(self, event: str):
         def decorator(func):
@@ -64,10 +66,10 @@ class PubSub:
                 if handler:
                     if inspect.iscoroutinefunction(handler):
                         await handler(
-                            data, cache=self._client, cache_helper=self._cache
+                            data, cache=self._client, cache_helper=self._cache, db_session = self._db_session
                         )
                     else:
-                        handler(data, cache=self._client, cache_helper=self._cache)
+                        handler(data, cache=self._client, cache_helper=self._cache, db_session = self._db_session)
         except ConnectionError as e:
             print("pubsub closed")
 

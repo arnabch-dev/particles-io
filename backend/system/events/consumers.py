@@ -9,6 +9,9 @@ from system.models import Player
 from system.events.events import PLAYERS_JOINED, ROOM_READY
 from system.utils import get_random_object_id
 from system.sio import sio
+from system.db import DBSessionManager
+from system.database.utils import add_room
+
 from system.socket.utils import dump_player_details
 
 # TODO: write a consumer starter script to publish an event to the consumer for the lobby handling in case of failures if happend
@@ -16,7 +19,7 @@ from system.socket.utils import dump_player_details
 
 
 @pub_sub.pattern_subscribe(PLAYERS_JOINED)
-async def add_player_to_room(data: dict, cache: Redis, cache_helper: Cache):
+async def add_player_to_room(data: dict, cache: Redis, cache_helper: Cache, db_session:DBSessionManager):
     print("event published")
     lobby_cache = PlayersLobbyCache(cache)
     players_cache = PlayersCache(cache)
@@ -54,7 +57,13 @@ async def add_player_to_room(data: dict, cache: Redis, cache_helper: Cache):
         )
 
         if score == -1:
-            await RoomCache.add_room(cache, room_id)
-            await sio.emit(
-                "game:start", {"room_id": room_id}, room=room_id, namespace="/lobby"
-            )
+            async with db_session.session() as session:
+                room = []
+                for player_id in await room_cache.get_all_players():
+                    room.append((room_id,player_id))
+                await add_room(session,room)
+                await room_cache.add_room(cache, room_id)
+                await sio.emit(
+                    "game:start", {"room_id": room_id}, room=room_id, namespace="/lobby"
+                )
+                await session.commit()
