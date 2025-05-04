@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from .cache.cache import Cache
 from system.socket import socket_app, game_namespace, lobby_namespace
 from system.routes.router import router as lobby_router
+from system.db import sessionmanager
 from .events import pub_sub
 import asyncio
 
@@ -18,9 +19,11 @@ async def startup_event(app: FastAPI):
     # setting up pub sub for disconnected users
     # delete users from the users
     # setting up db
+    await sessionmanager.create_tables()
+    app.state.db_session = sessionmanager
     game_namespace.set_app(app)
     lobby_namespace.set_app(app)
-    pub_sub.set_pubsub(app.state.cache)
+    pub_sub.set_pubsub(app.state.cache,app.state.db_session)
     await pub_sub.start_listening()
     asyncio.create_task(game_namespace.start_game_ticker(app))
     yield

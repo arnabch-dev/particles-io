@@ -1,3 +1,13 @@
+### dependency management
+* Managed using poetry
+* for the postgres using asyncpg and psycopg2
+* if getting error add the below in the dependencies in the pyproject.toml
+    ```
+        "psycopg2-binary (>=2.9.10,<3.0.0)",
+        "asyncpg (>=0.29.0,<1.0.0)"
+    ```
+* run poetry update
+
 # Player payload
 ```
 players:{

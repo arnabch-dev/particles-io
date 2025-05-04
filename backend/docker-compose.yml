@@ -11,3 +11,13 @@ services:
     container_name: redisinsight
     ports:
       - 5540:5540
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=particlesio
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=arnab
+    ports:
+      - "5432:5432"
