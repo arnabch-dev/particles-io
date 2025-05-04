@@ -6,6 +6,7 @@ class RoomCache:
         self.cache = cache
         self.room_id = f"room:{room_id}"
 
+    # the rooms set is having a room id means its a running room
     @classmethod
     async def add_room(cls, cache: Cache, room_id: str):
         async with cache as cache_instance:
@@ -16,6 +17,12 @@ class RoomCache:
         async with cache as cache_instance:
             room_ids = await cache_instance.smembers("rooms")
             return list(map(lambda pid: pid.decode("utf-8"), room_ids))
+
+    @classmethod
+    async def get_room(cls, cache: Cache,room_id):
+        async with cache as cache_instance:
+            return await cache_instance.sismember("rooms",room_id)
+
 
     @classmethod
     async def remove_room(cls, cache: Cache, room_id: str):

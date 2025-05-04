@@ -123,6 +123,8 @@ class GameNamespace(AsyncNamespace):
         if not player_exists:
             raise Exception("Player not existing")
         room_id = player_exists.room_id
+        if not await RoomCache.get_room(cache, room_id):
+            raise Exception("Game not started")
         room = RoomCache(cache, room_id)
         await self.enter_room(sid, room=room_id, namespace=self.namespace)
         player_data = await get_all_player_details(players_cache, room)
