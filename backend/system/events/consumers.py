@@ -10,7 +10,7 @@ from system.events.events import PLAYERS_JOINED, ROOM_READY
 from system.utils import get_random_object_id
 from system.sio import sio
 from system.db import DBSessionManager
-from system.database.utils import add_room
+from system.database.utils import add_room, add_players
 
 from system.socket.utils import dump_player_details
 
@@ -58,10 +58,11 @@ async def add_player_to_room(data: dict, cache: Redis, cache_helper: Cache, db_s
 
         if score == -1:
             async with db_session.session() as session:
-                room = []
+                players = []
                 for player_id in await room_cache.get_all_players():
-                    room.append((room_id,player_id))
-                await add_room(session,room)
+                    players.append(player_id)
+                await add_room(session,room_id)
+                await add_players(session,players,room_id)
                 await room_cache.add_room(cache, room_id)
                 await sio.emit(
                     "game:start", {"room_id": room_id}, room=room_id, namespace="/lobby"
