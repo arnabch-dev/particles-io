@@ -2,7 +2,7 @@ from .cache import Cache, serialise_cache_get_data
 from system.models import Player
 
 SCORE_OF_ROOM = 1
-MAX_SCORE_OF_ROOM = 3
+MAX_SCORE_OF_ROOM = 2
 
 
 class AvailableRoomsCache:
