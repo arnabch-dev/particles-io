@@ -27,11 +27,3 @@ class Player(Base):
     room_id = Column(String(50),nullable=False)
     player_id = Column(String(50),primary_key=True,nullable=False)
     # a color
-
-class RoomHistory(Base):
-    __tablename__ = "room_history"
-    id = Column(Integer,primary_key=True,autoincrement=True)
-    room_id = Column(String(50),nullable=False)
-    player_id = Column(String(50),primary_key=True,nullable=False)
-    score = Column(Integer,default=0)
-    created_at = Column(DateTime, server_default=func.now())
