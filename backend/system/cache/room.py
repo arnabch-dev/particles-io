@@ -41,6 +41,10 @@ class RoomCache:
         async with self.cache as cache:
             pids = await cache.smembers(self.room_id)
             return list(map(lambda pid: pid.decode("utf-8"), pids))
+        
+    async def get_player_count(self):
+        async with self.cache as cache:
+            return await cache.scard(self.room_id)
 
     async def has(self, player_id):
         if not player_id:

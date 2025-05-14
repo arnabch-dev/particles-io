@@ -29,3 +29,7 @@ class ProjectileCache:
     async def push_to_front(self, projectile: Projectile):
         async with self.cache as cache:
             await cache.lpush(self.projectile_queue_id, projectile.model_dump_json())
+
+    async def delete(self):
+        async with self.cache as cache:
+            await cache.delete(self.projectile_queue_id)
