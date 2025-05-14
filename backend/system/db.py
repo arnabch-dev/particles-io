@@ -42,4 +42,6 @@ async def get_db_session():
     async with sessionmanager.session() as session:
         yield session
 
+def get_db_session_from_app(app)->DBSessionManager:
+    return app.state.db_session
 DBSesionDep = Annotated[AsyncSession,Depends(get_db_session)]
