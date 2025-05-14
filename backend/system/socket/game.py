@@ -13,7 +13,10 @@ from system.models import Projectile, ProjectileResponse, GameElement
 from system.cache.room import RoomCache
 from system.cache.players import PlayersCache
 from system.cache.projectile import ProjectileCache
+from system.cache.leaderboard import LeaderboardCache
 from system.cache.cache import Cache, get_cache_from_app
+from system.db import get_db_session_from_app
+from system.events.publishers import publish_game_over
 
 SPEED = 30
 GRAVITY = 0.016
@@ -54,7 +57,9 @@ class GameNamespace(AsyncNamespace):
 
     async def sync_projectile_and_collision(self, app, room_id):
         cache = get_cache_from_app(app)
+        db_session = get_db_session_from_app(app)
         players_cache = PlayersCache(cache)
+        leaderboard = LeaderboardCache(cache,room_id)
         projectile_cache = ProjectileCache(cache, room_id)
         projectiles = await projectile_cache.remove_projectiles()
         room = RoomCache(cache, room_id)
@@ -85,6 +90,7 @@ class GameNamespace(AsyncNamespace):
                             **projectile.position, radius=PROJECTILE_RADIUS
                         )
                         if check_collision(player_element, projectile_element):
+                            await leaderboard.add_score(cur_player.player_id)
                             await self.remove_player(
                                 players_cache, room, cur_player.player_id
                             )
@@ -104,8 +110,26 @@ class GameNamespace(AsyncNamespace):
         for projectile in projectiles[::-1]:
             if projectile:
                 await projectile_cache.push_to_front(projectile)
-
+        
+        player_count = await room.get_player_count()
         await self.emit("update-projectiles", projectile_response, to=room_id)
+        if player_count <= 1:
+            await self.emit('over', {'room_id': room_id}, to=room_id)
+
+            players = await room.get_all_players()
+
+            # it will be only one player though
+            remove_player_tasks = [
+                self.remove_player(players_cache, room, player_id)
+                for player_id in players
+            ]
+
+            await asyncio.gather(
+                RoomCache.remove_room(cache, room_id),
+                projectile_cache.delete(),
+                publish_game_over(room_id),
+                *remove_player_tasks
+            )
 
     async def start_game_ticker(self, app):
         cache = get_cache_from_app(app)
