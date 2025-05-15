@@ -6,6 +6,7 @@ import LobbyConnectingPage from "./pages/lobby";
 import LobbyRoomPage from "./pages/game-room";
 import LobbyContextProvider from "./context/LobbyContextProvider";
 import GameSocketProvider from "./context/GameSocketProvider";
+import Leaderboard from "./pages/leaderboard";
 
 function App() {
   const URI = `${window.location.origin}/multiplayer`;
@@ -26,6 +27,8 @@ function App() {
           <Route path="multiplayer/game" element={<GameSocketProvider/>}>
             <Route path=":room" element={<MultiplayerPage />} />
           </Route>
+
+          <Route path="leaderboard/:room" element={<Leaderboard />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -6,9 +6,14 @@ from system.cache.cache import get_cache_from_request
 from system.cache.players_lobby import PlayersLobbyCache
 from system.cache.room import RoomCache
 from system.cache.players import PlayersCache
+from system.cache.leaderboard import LeaderboardCache
+from system.db import DBSesionDep
+from system.database.utils import get_leaderboard_of_room
 from system.socket.utils import dump_player_details, get_all_player_details
 from system.auth import VerifyToken
 from pydantic import BaseModel
+import json
+
 
 router = APIRouter()
 
@@ -18,7 +23,7 @@ class HeaderPayload(BaseModel):
 
 
 # TODO: maybe assigning something of a token to identify they are already verified so that no auth checks everytime
-
+# TODO: having a room:completed cache to retrieve from db and redirecting to the leaderboard automatically
 
 @router.post("/")
 async def add_to_lobby(request: Request, headers: Annotated[HeaderPayload, Header()]):
@@ -72,3 +77,19 @@ async def get_players_of_room(
 
     players = await get_all_player_details(player_cache, room)
     return JSONResponse(players)
+
+
+@router.get("/leaderboard/{room_id}")
+async def get_leaderboard(request: Request, room_id: str,db:DBSesionDep):
+    cache = get_cache_from_request(request)
+    leaderboard_cache = LeaderboardCache(cache,room_id)
+    leaderboard = await leaderboard_cache.get_leaderboard()
+    if leaderboard:
+        return leaderboard
+    async with db:
+        leaderboard = await get_leaderboard_of_room(db,room_id)
+    if leaderboard:
+        data = json.loads(leaderboard)
+        await leaderboard_cache.init_leaderboard(data)
+        return data
+    return {}

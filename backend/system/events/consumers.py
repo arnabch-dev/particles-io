@@ -59,17 +59,21 @@ async def add_player_to_room(data: dict, cache: Redis, cache_helper: Cache, db_s
         )
 
         if score == -1:
+            leaderboard = LeaderboardCache(cache,room_id)
             async with db_session.session() as session:
                 players = []
                 for player_id in await room_cache.get_all_players():
                     players.append(player_id)
                 await add_room(session,room_id)
                 await add_players(session,players,room_id)
-                await room_cache.add_room(cache, room_id)
-                await sio.emit(
-                    "game:start", {"room_id": room_id}, room=room_id, namespace="/lobby"
-                )
                 await session.commit()
+            await asyncio.gather(
+                room_cache.add_room(cache, room_id),
+                leaderboard.init_leaderboard({player:0 for player in players})
+            )
+            await sio.emit(
+                "game:start", {"room_id": room_id}, room=room_id, namespace="/lobby"
+            )
 
 
 @pub_sub.pattern_subscribe(ROOM_OVER)
@@ -82,8 +86,8 @@ async def complete_room(room_id: str, cache: Redis, cache_helper: Cache, db_sess
 
         leaderboard_data = await leaderboard.get_leaderboard()
 
-        for player_id, score in leaderboard_data:
-            scores[player_id.decode("utf-8")] = score
+        for player_id,score in leaderboard_data.items():
+            scores[player_id] = score
 
         scores_json = json.dumps(scores)
 

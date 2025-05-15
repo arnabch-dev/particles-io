@@ -87,12 +87,10 @@ export default function LobbyContextProvider({ children }: PropsWithChildren) {
           setIsConnected(false);
         });
 
-        // 📢 On room added — go to lobby room
         newSocket.on("game:room-added", ({ room_id }) => {
           navigate(`/multiplayer/${room_id}`);
         });
 
-        // 📢 On game start — go to game page
         newSocket.on("game:start", ({ room_id }) => {
           navigate(`/multiplayer/game/${room_id}`);
         });

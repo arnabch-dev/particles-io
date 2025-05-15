@@ -10,7 +10,7 @@ import { type Coordinate } from "../core/core";
 import { useAuth0 } from "@auth0/auth0-react";
 import Loader from "../components/Loader";
 import AuthProtect from "../components/AuthProctect";
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 
 interface Player {
   color: string;
@@ -56,12 +56,12 @@ export const useGameSocket = () => {
   return context;
 };
 
-// TODO: handle rooms here
 export default function GameSocketProvider({ children }: PropsWithChildren) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [playerData, setPlayerData] = useState<Player[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const navigate = useNavigate();
 
   const { getIdTokenClaims, getAccessTokenSilently, isAuthenticated, user } =
     useAuth0();
@@ -125,6 +125,10 @@ export default function GameSocketProvider({ children }: PropsWithChildren) {
 
     newSocket.on("update-projectiles", (newProjectiles: Projectile[]) => {
       setProjectiles(newProjectiles);
+    });
+
+    newSocket.on("over", ({ room_id }) => {
+      navigate(`/leaderboard/${room_id}`);
     });
 
     return () => {
