@@ -19,7 +19,6 @@ export default function Leaderboard() {
         const data = await res.json();
 
         const sortedData = Object.entries(data)
-          .sort((a, b) => b[1] - a[1])
           .map(([name, score], index) => ({
             rank: index + 1,
             name,

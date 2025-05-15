@@ -91,5 +91,5 @@ async def get_leaderboard(request: Request, room_id: str,db:DBSesionDep):
     if leaderboard:
         data = json.loads(leaderboard)
         await leaderboard_cache.init_leaderboard(data)
-        return data
+        return await leaderboard_cache.get_leaderboard()
     return {}

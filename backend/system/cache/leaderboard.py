@@ -24,7 +24,8 @@ class LeaderboardCache:
     async def get_leaderboard(self):
         async with self.cache as cache:
             scores = {}
-            for player_id, score in await cache.zrange(self.name, 0, -1, withscores=True):
+            # getting in top score to least score
+            for player_id, score in await cache.zrevrange(self.name, 0, -1, withscores=True):
                 scores[player_id.decode("utf-8")] = score
             await cache.expire(self.name, VIEW_TTL)
             return scores

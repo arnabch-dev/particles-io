@@ -27,7 +27,7 @@ async def mark_game_over(session: AsyncSession, room_id: str,leaderboard):
         room.leaderboard = leaderboard
 
 async def get_players_of_room(session:AsyncSession,room_id:str):
-    stmt = select(Player).where(room_id == room_id)
+    stmt = select(Player).where(Player.room_id == room_id)
     result = await session.execute(stmt)
     players = result.scalars().all()
     return players
