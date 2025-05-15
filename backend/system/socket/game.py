@@ -90,7 +90,8 @@ class GameNamespace(AsyncNamespace):
                             **projectile.position, radius=PROJECTILE_RADIUS
                         )
                         if check_collision(player_element, projectile_element):
-                            await leaderboard.add_score(cur_player.player_id)
+                            await leaderboard.add_score(projectile.user_id)
+                            await self.emit('over',{'room_id': room_id},to=cur_player.sid)
                             await self.remove_player(
                                 players_cache, room, cur_player.player_id
                             )
@@ -114,9 +115,9 @@ class GameNamespace(AsyncNamespace):
                 await projectile_cache.push_to_front(projectile)
         
         player_count = await room.get_player_count()
-        await self.emit("update-projectiles", projectile_response, to=room_id)
+        await self.emit("update-projectiles", projectile_response, room=room_id)
         if player_count <= 1:
-            await self.emit('over', {'room_id': room_id}, to=room_id)
+            await self.emit('over', {'room_id': room_id}, room=room_id)
 
             players = await room.get_all_players()
 
@@ -152,6 +153,9 @@ class GameNamespace(AsyncNamespace):
         if not await RoomCache.get_room(cache, room_id):
             raise Exception("Game not started")
         room = RoomCache(cache, room_id)
+        # updating the sid as the namespace is changed so adding the new sid
+        player_exists.sid = sid
+        await players_cache.set_player(player_exists)
         await self.enter_room(sid, room=room_id, namespace=self.namespace)
         player_data = await get_all_player_details(players_cache, room)
         await self.save_session(sid, {"user_id": user_id, "room_id": room_id})

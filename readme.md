@@ -29,11 +29,18 @@ Using gsap for animation -> as it provides more granular control over the values
 [x] Making the player movement snappy. Update the logic of adding player -> updating the position of prev player and having a tweening between prev and current position
 
 ### Multiplayer
-[] Creating multiple players
+[x] Creating multiple players
 
-[] Lobby
+[x] Lobby
 
-[] Showing each player scores
+[x] Showing each player scores
+
+### May be later implementing(easy things)
+[] rate limit movements + suspicious activity -> having a cache with calculating the movements
+
+[] calculating next movements based on ping + sequence
+
+[] saving color in the db
 
 ### How game engine is working in frontend?
 Basically it is taking items and drawing on canvas at every interval.
