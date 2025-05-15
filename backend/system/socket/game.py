@@ -94,6 +94,8 @@ class GameNamespace(AsyncNamespace):
                             await self.remove_player(
                                 players_cache, room, cur_player.player_id
                             )
+                            # if not removed then score will increase by two as player is deleted from the source but is present in the memory
+                            del players_map[cur_player.player_id]
                             projectiles[idx] = None
                             HIT = True
                             break
