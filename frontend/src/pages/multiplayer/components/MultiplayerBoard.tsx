@@ -79,16 +79,19 @@ export default function MultiplayerBoard() {
       const currentPlayers = new Set(
         playerDetails.map((player) => player.player_id)
       );
-      playerIds.forEach((playerId) => {
-        if (!currentPlayers.has(playerId)) {
-          const player = gameEngine.getPlayer(playerId)!;
+      playerIds.forEach((opponentId) => {
+        if (!currentPlayers.has(opponentId)) {
+          const player = gameEngine.getPlayer(opponentId)!;
           gameEngine.addParticles(
             player.x,
             player.y,
             player.radius,
             player.color
           );
-          gameEngine.removePlayer(playerId);
+          gameEngine.removePlayer(opponentId);
+        }
+        if(opponentId===playerId){
+          gameEngine.addText(gameEngine.getPlayer(opponentId),'you');
         }
       });
 

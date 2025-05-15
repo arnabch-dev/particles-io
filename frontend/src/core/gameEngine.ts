@@ -36,6 +36,10 @@ export class GameEngine {
     this.playing = true;
   }
 
+  public addText(player:Circle,text:string){
+    this.context?.fillText(text, player.x-3, player.y - 20);
+  }
+
   public addPlayer(id: string, player: Circle) {
     const existing = this.getPlayer(id);
     if (existing) {
