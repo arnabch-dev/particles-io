@@ -42,6 +42,22 @@ Using gsap for animation -> as it provides more granular control over the values
 
 [] saving color in the db
 
+### Deployment plans
+[] Infra type code -> aws cdk(free tier)
+    
+    [] A single ec2 compute for server
+    [] Ec2 + ecs for redis and postgres each
+    [] cloud discovery for private dns in front of the ecs
+
+[] Improvement plan
+
+    [] Fargate with network load balancer
+    [] Attaching volume
+    [] Auto scaling
+    [] using a load balancer in front of the ecs
+
+[] main access -> render + upstash + netlify + supabase
+
 ### How game engine is working in frontend?
 Basically it is taking items and drawing on canvas at every interval.
 * Thats why canvas is getting cleared before drawing any thing
