@@ -169,10 +169,14 @@ class GameNamespace(AsyncNamespace):
             raise Exception("Player not existing")
         room_id = player_exists.room_id
         room_cache = RoomCache(cache,room_id)
-        room, player_in_room = await asyncio.gather(
-            RoomCache.get_room(cache, room_id),
-            room_cache.has(user_id)
-        )
+        # HACK: in prod it is giving connection errro if done with gather due to concurrent connections
+        # EIther use pipeline or separate calls
+        # room, player_in_room = await asyncio.gather(
+        #     RoomCache.get_room(cache, room_id),
+        #     room_cache.has(user_id)
+        # )
+        room = await RoomCache.get_room(cache, room_id)
+        player_in_room = room_cache.has(user_id)
         if not any((room_id,player_in_room)):
             raise Exception("Game not started")
 
