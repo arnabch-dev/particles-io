@@ -7,6 +7,7 @@
         "asyncpg (>=0.29.0,<1.0.0)"
     ```
 * run poetry update
+* run poetry install --no-root
 
 # Player payload
 ```
