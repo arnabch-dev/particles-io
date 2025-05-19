@@ -2,15 +2,11 @@ from system.db import Base
 from sqlalchemy import (
     Column, String, Integer, DateTime,Enum, func, JSON
 )
-import enum
-
+from system.constant import RoomStatus
 # using a basic model
 # not creating rooms as such
 # TODO: improve the modelling -> add another room model to store the metadata regarding the room, adding foreign keys
 
-class RoomStatus(enum.Enum):
-    started = "started"
-    completed = "completed"
 
 class Room(Base):
     __tablename__ = "room"
