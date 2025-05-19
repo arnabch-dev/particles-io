@@ -2,11 +2,13 @@ import redis.asyncio as redis
 from fastapi import Request, FastAPI
 import json, uuid
 from contextlib import asynccontextmanager
+import os
 
+redis_uri = os.environ.get("REDIS_URI")
 
 class Cache:
-    def __init__(self, redis_url: str = "redis://localhost:6379", pool_size: int = 5):
-        self.pool = redis.ConnectionPool.from_url(redis_url, max_connections=pool_size)
+    def __init__(self, pool_size: int = 5):
+        self.pool = redis.ConnectionPool.from_url(redis_uri, max_connections=pool_size)
         self.client: redis.Redis = redis.Redis(
             connection_pool=self.pool, decode_responses=True
         )  # Decode to string
