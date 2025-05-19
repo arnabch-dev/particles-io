@@ -1,35 +1,23 @@
-from .cache import Cache, serialise_cache_get_data
+from collections import deque, defaultdict
 from system.models import Projectile
 
-
-# a queue -> projectile coming and removing
 class ProjectileCache:
-    def __init__(self, cache: Cache, room_id: str):
-        self.cache = cache
-        self.projectile_queue_id = f"projectile:{room_id}"
+    def __init__(self):
+        self.cache = defaultdict(deque)
 
-    async def add_projectile(self, projectile: Projectile):
-        async with self.cache as cache:
-            data = await cache.rpush(
-                self.projectile_queue_id, projectile.model_dump_json()
-            )
+    def add_projectile(self, key: str, projectile: Projectile):
+        self.cache[key].append(projectile)
 
-    async def remove_projectiles(self) -> list[Projectile]:
-        async with self.cache as cache:
-            size = await cache.llen(self.projectile_queue_id)
-            projectile_list = await cache.lpop(self.projectile_queue_id, size)
-            projectiles = []
-            if not projectile_list:
-                return projectiles
-            for projectile in projectile_list:
-                projectile = serialise_cache_get_data(projectile)
-                projectiles.append(Projectile(**projectile))
-            return projectiles
+    def remove_projectiles(self, key: str) -> list[Projectile]:
+        projectile_queue = self.cache[key]
+        projectiles = list(projectile_queue)
+        projectile_queue.clear()
+        return projectiles
 
-    async def push_to_front(self, projectile: Projectile):
-        async with self.cache as cache:
-            await cache.lpush(self.projectile_queue_id, projectile.model_dump_json())
+    def push_to_front(self, key: str, projectile: Projectile):
+        self.cache[key].appendleft(projectile)
 
-    async def delete(self):
-        async with self.cache as cache:
-            await cache.delete(self.projectile_queue_id)
+    def delete(self, key: str):
+        if key in self.cache:
+            del self.cache[key]
+
