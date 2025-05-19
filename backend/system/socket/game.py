@@ -42,6 +42,9 @@ async def get_rooms():
 # HACK: each room has max of 3 players so not that much of a perssure on the server to make calls to the redis server
 # same for the leaderboard
 # pressure will be with the players movement and projectiles as they are changing continuously
+
+
+# TODO: Adding syncing game rooms from the cache to the local game_room. Since a single server so not adding
 class GameNamespace(AsyncNamespace):
     # generally app will be setup during startup event
     def __init__(self, namespace="/game", app=None):
@@ -155,7 +158,7 @@ class GameNamespace(AsyncNamespace):
             for room_id in rooms:
                 if game_room.is_game_started(room_id):
                     players = game_room.get_all_players(room_id)
-                    await player_cache.set_players_batch(players)
+                    await player_cache.set_players_batch(players,ttl=300)
             await asyncio.sleep(30)
 
     @con_event
