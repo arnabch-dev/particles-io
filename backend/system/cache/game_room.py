@@ -61,4 +61,4 @@ class GameRoomCache:
     
     def is_game_completed(self,room_id):
         # TODO: need to consider the disconnection of the player as well
-        return self._cache[room_id]['status'] == RoomStatus.started and self.get_player_count(room_id) < MAX_MEMBERS
+        return self._cache[room_id]['status'] == RoomStatus.started and self.get_player_count(room_id) <= 1
