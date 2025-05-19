@@ -1,8 +1,8 @@
 from .cache import Cache, serialise_cache_get_data
 from system.models import Player
+from system.constant import MAX_MEMBERS
 
 SCORE_OF_ROOM = 1
-MAX_SCORE_OF_ROOM = 3
 
 
 class AvailableRoomsCache:
@@ -19,9 +19,9 @@ class AvailableRoomsCache:
             return await cache.zincrby(self.name, SCORE_OF_ROOM, room_id)
 
     async def increment_room_score_till_threshold(self, room_id):
-        f"""Increment by {SCORE_OF_ROOM}. If reached {MAX_SCORE_OF_ROOM} then it removes the room"""
+        f"""Increment by {SCORE_OF_ROOM}. If reached {MAX_MEMBERS} then it removes the room"""
         score = await self.add_room(room_id)
-        if score == MAX_SCORE_OF_ROOM:
+        if score == MAX_MEMBERS:
             await self.remove_room(room_id)
             return -1
         return score
