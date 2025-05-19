@@ -7,10 +7,14 @@ from system.routes.router import router as lobby_router
 from system.db import sessionmanager
 from .events import pub_sub
 import asyncio
+import os
 
+frontend_deployed_origin = os.environ.get("FRONTEND_ORIGIN")
 origins = [
-    "http://localhost:5173",
+    "http://localhost:5173"
 ]
+if frontend_deployed_origin:
+    origins.append(frontend_deployed_origin)
 
 
 @asynccontextmanager
