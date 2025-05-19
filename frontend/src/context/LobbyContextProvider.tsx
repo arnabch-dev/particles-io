@@ -22,13 +22,15 @@ export const useLobbySocket = () => {
     );
   return context;
 };
-
+// @ts-ignore
 export default function LobbyContextProvider({ children }: PropsWithChildren) {
   const [socket, setSocket] = useState<Socket | null>(null);
+  // @ts-ignore
   const [isConnected, setIsConnected] = useState(false);
 
   const { getAccessTokenSilently, isAuthenticated, user } = useAuth0();
   const [token, setToken] = useState<string | null>(null);
+  // @ts-ignore
   const [playerId, setPlayerId] = useState<string | null>(null);
 
   const navigate = useNavigate();
@@ -52,7 +54,7 @@ export default function LobbyContextProvider({ children }: PropsWithChildren) {
     if (!token || !user) return;
     async function connectToLobby() {
       try {
-        const res = await axios.post(
+        await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/lobby/`,
           {},
           {

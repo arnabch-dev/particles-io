@@ -21,6 +21,7 @@ export class GameEngine {
   private onGameOver: () => void;
   public playing: boolean;
   constructor(
+    // @ts-ignore
     private canvas: HTMLCanvasElement,
     onGameOver: () => void,
     public focus: number = 0,
@@ -199,6 +200,7 @@ export class GameEngine {
   public start = () => {
     this.animationId = requestAnimationFrame(this.updateGame);
     if (this.gameMode === "single")
+      // @ts-ignore
       this.intervalId = setInterval(this.spawnEnemies, 1000);
   };
 
@@ -281,12 +283,4 @@ export class GameEngine {
     );
   }
 
-  public addTrajectoryVisualiser(
-    targetX: number,
-    targetY: number,
-    force?: number,
-    applyGravity?: boolean
-  ) {
-    return;
-  }
 }

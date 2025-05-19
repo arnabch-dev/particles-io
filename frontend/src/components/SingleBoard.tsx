@@ -28,9 +28,9 @@ export default function SingleBoard() {
   );
 
   // Using useFocus hook
-  const { focus } = useFocus({
+  useFocus({
     onFocusRelease: handleShoot,
-    onFocusChange:(e,focusValue)=>{
+    onFocusChange:(_,focusValue)=>{
         gameEngine?.updateFocusBar(focusValue)
     }
   });

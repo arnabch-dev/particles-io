@@ -17,13 +17,13 @@ export default function MultiplayerBoard() {
     playerId,
     emitMovement,
     emitShoot,
-    resetProjetiles,
   } = useGameSocket();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [gameEngine, setGameEngine] = useState<GameEngine | null>(null);
 
   // Stable reference to handle shooting
   const handleShoot = useCallback(
+    // @ts-ignore
     (e: MouseEvent, focusValue: number) => {
       if (!playerDetails || !playerId) return;
       const player = gameEngine?.getPlayer(playerId);
@@ -40,7 +40,7 @@ export default function MultiplayerBoard() {
   // Use custom hook
   const { focus } = useFocus({
     onFocusRelease: handleShoot,
-    onFocusChange: (e, focusValue) => {
+    onFocusChange: (_, focusValue) => {
       gameEngine?.updateFocusBar(focusValue);
     },
   });
@@ -91,7 +91,7 @@ export default function MultiplayerBoard() {
           gameEngine.removePlayer(opponentId);
         }
         if(opponentId===playerId){
-          gameEngine.addText(gameEngine.getPlayer(opponentId),'you');
+          gameEngine.addText(gameEngine.getPlayer(opponentId) as Circle,'you');
         }
       });
 

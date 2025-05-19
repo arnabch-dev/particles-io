@@ -1,5 +1,4 @@
 
-import { Trophy } from 'lucide-react';
 import { LeaderboardCard } from '../../../components/LeaderboardCard';
 
 // Mock leaderboard data

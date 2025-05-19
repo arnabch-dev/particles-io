@@ -56,6 +56,7 @@ export const useGameSocket = () => {
   return context;
 };
 
+// @ts-ignore
 export default function GameSocketProvider({ children }: PropsWithChildren) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [playerData, setPlayerData] = useState<Player[]>([]);
@@ -63,7 +64,7 @@ export default function GameSocketProvider({ children }: PropsWithChildren) {
   const [isConnected, setIsConnected] = useState(false);
   const navigate = useNavigate();
 
-  const { getIdTokenClaims, getAccessTokenSilently, isAuthenticated, user } =
+  const { getAccessTokenSilently, isAuthenticated, user } =
     useAuth0();
 
   const [token, setToken] = useState<string | null>(null);
