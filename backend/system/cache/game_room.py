@@ -36,7 +36,7 @@ class GameRoomCache:
     def get_players_batch(self,room_id:str):
         return self._cache.get(room_id, {}).get("players", {})
 
-    def get_all_players(self, room_id: str):
+    def get_all_players(self, room_id: str) -> list[Player]:
         return list(self.get_players_batch(room_id).values())
     
     def get_projectile_cache(self, room_id: str) -> ProjectileCache:

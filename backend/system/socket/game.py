@@ -147,6 +147,17 @@ class GameNamespace(AsyncNamespace):
                     await self.sync_projectile_and_collision(app, room_id)
             await asyncio.sleep(0.015)
 
+    async def sync_game_rooms(self,app):
+        cache = get_cache_from_app(app)
+        player_cache = PlayersCache(cache)
+        while True:
+            rooms = game_room.get_rooms()
+            for room_id in rooms:
+                if game_room.is_game_started(room_id):
+                    players = game_room.get_all_players(room_id)
+                    await player_cache.set_players_batch(players)
+            await asyncio.sleep(30)
+
     @con_event
     async def on_connect(self, sid, cache: Cache, user_id: str, *args, **kwargs):
         players_cache = PlayersCache(cache)

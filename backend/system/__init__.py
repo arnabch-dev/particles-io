@@ -26,6 +26,7 @@ async def startup_event(app: FastAPI):
     pub_sub.set_pubsub(app.state.cache,app.state.db_session)
     await pub_sub.start_listening()
     asyncio.create_task(game_namespace.start_game_ticker(app))
+    asyncio.create_task(game_namespace.sync_game_rooms(app))
     yield
     await pub_sub.close()
     await app.state.cache.close()

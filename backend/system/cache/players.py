@@ -9,6 +9,17 @@ class PlayersCache:
     async def set_player(self, player: Player, ttl=600):
         async with self.cache as cache:
             await cache.set(f"player:{player.player_id}", player.model_dump_json(), ttl)
+    
+    async def set_players_batch(self, players: list[Player], ttl=600):
+        async with self.cache as cache:
+            pipeline = cache.pipeline()
+
+            for player in players:
+                key = f"player:{player.player_id}"
+                value = player.model_dump_json()
+                pipeline.set(key, value, ex=ttl)
+
+            await pipeline.execute()
 
     async def get_player(self, player_id: str) -> Player | None:
         async with self.cache as cache:

@@ -79,7 +79,8 @@ leaderboard: sorted_set # heap
     * Redis is the layer for syncing -> Getting initial states or where the player was last time or a snapshot
     * Local cache is for the fast changing data. Coordinates changing at every 15ms. Also the projectiles
     * At every 15ms -> Local cache is updated
-    * At every 30s -> the redis cache + database is updated
+    * At every 30s -> the redis cache is updated
+    * Not saving player movements to the database as we dont need replay for later on. May be added with a queue with aggregation doing batch updates
     * Some necessary parts like leaderboard and removal of players are done in the cache + db directly along with the local cache
 
 * Failover strategy
