@@ -4,6 +4,8 @@ Just a normal 2d shooting game for exploring canvas and server driven events and
 
 Using gsap for animation -> as it provides more granular control over the values and not dom focused like framer motion
 
+### Whole flow
+![alt text](canvas.png)
 
 ### From Canvas side(Single Player mode)
 [x] Creating players
