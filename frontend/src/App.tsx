@@ -16,6 +16,8 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           
+          <Route path="single" element={<h1>Some fixes going on</h1>} />
+
           {/* Routing based on namespace for having a discrete namespace websocket connection to the server */}
           {/* Lobby Routes */}
           <Route path="multiplayer" element={<LobbyContextProvider />}>
