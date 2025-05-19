@@ -66,6 +66,30 @@ leaderboard: sorted_set # heap
     * Game joining when a player leaves a match in between. So at the start player makes a http call for lobby queueing. If he is a part of a prev match then no continuing.
     Plus the server takes care of room joining
 
+> In a prod and at scale -> may be two or three rooms should be emulated in a single server node.
+
+# Game tick server
+* Problem of redis is we need to make a network roundtrip -> every 15ms making a network roundtrip is costly
+* Challenge -> syncing between local cache , redis distributed cache and the database
+    * Local cache -> for game ticker should be always fast
+    * what if the server crash?
+
+* Solution
+    * DB is the source of truth
+    * Redis is the layer for syncing -> Getting initial states or where the player was last time or a snapshot
+    * Local cache is for the fast changing data. Coordinates changing at every 15ms. Also the projectiles
+    * At every 15ms -> Local cache is updated
+    * At every 30s -> the redis cache + database is updated
+    * Some necessary parts like leaderboard and removal of players are done in the cache + db directly along with the local cache
+
+* Failover strategy
+    * We don't need to projectiles anywhere. Cause they simply can be fired again by the users
+    * But player movements are necessary. We don't that to be again generated at random.
+    * Redis -> snapshot of the last stored state of the player coordinates
+    * If redis is also not having data -> lets load it from the db to the redis cause redis is also getting used as a session manager and checker
+    * Replicate redis state to the room
+    * DB is the ultimate source of truth
+    * Plus redis cache is also getting used for tracking online of the player in the room so we need to update at some seconds
 
 ### Deployment plan
 * Deploy with docker. Nginx on top of the server -> 
